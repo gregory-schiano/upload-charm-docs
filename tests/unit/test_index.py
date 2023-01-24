@@ -6,12 +6,13 @@
 # Need access to protected functions for testing
 # pylint: disable=protected-access
 
+from itertools import chain
 from pathlib import Path
 from unittest import mock
 
 import pytest
 
-from src import discourse, index, types_
+from src import discourse, exceptions, index, types_
 from src.exceptions import DiscourseError, ServerError
 
 from .. import factories
@@ -164,6 +165,80 @@ def test_get_contents_from_page(page: str, expected_content: str):
 # scope of variables in the parametrized tests
 
 
+def _test__get_contents_list_items_invalid_parameters():
+    """Generate parameters for the test__get_contents_list_items_invalid test."""
+    return [
+        pytest.param(
+            f"""# Contents
+{(line := ' - [title 1](value 1)')}""",
+            (line,),
+            id="first item has single leading space",
+        ),
+        pytest.param(
+            f"""# Contents
+{(line := '  - [title 1](value 1)')}""",
+            (line,),
+            id="first item has multiple leading space",
+        ),
+        pytest.param(
+            f"""# Contents
+{(line := 'malformed')}""",
+            (line,),
+            id="single malformed line",
+        ),
+        pytest.param(
+            f"""# Contents
+[title 1](value 1)
+{(line := 'malformed')}""",
+            (line,),
+            id="multiple lines single malformed line second",
+        ),
+        pytest.param(
+            f"""# Contents
+{(line := 'malformed')}
+[title 1](value 1)""",
+            (line,),
+            id="multiple lines single malformed line first",
+        ),
+        pytest.param(
+            f"""# Contents
+{(line := 'malformed 1')}
+malformed 2""",
+            (line,),
+            id="multiple malformed lines",
+        ),
+    ]
+
+
+@pytest.mark.parametrize(
+    "content, expected_message_contents", _test__get_contents_list_items_invalid_parameters()
+)
+def test__get_contents_list_items_invalid(
+    content: str, expected_message_contents: tuple[str, ...]
+):
+    """
+    arrange: given the index file contents which are invalid
+    act: when get_contents_list_items is called with the index file
+    assert: then InputError is raised with the expected contents in the message.
+    """
+    index_file = types_.IndexFile(title="title 1", content=content)
+
+    with pytest.raises(exceptions.InputError) as exc_info:
+        index._get_contents_list_items(index_file=index_file)
+
+    assert_substrings_in_string(
+        chain(
+            expected_message_contents,
+            "invalid",
+            "item",
+            "contents",
+            "index",
+            index.DOCUMENTATION_INDEX_FILENAME,
+        ),
+        str(exc_info.value),
+    )
+
+
 def _test__get_contents_list_items_parameters():
     """Generate parameters for the test__get_contents_list_items test."""
     return [
@@ -186,6 +261,28 @@ def _test__get_contents_list_items_parameters():
                 )
             ),
             id="single item",
+        ),
+        pytest.param(
+            f"""# Contents
+
+- [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})""",
+            (
+                factories.IndexContentsListItemFactory(
+                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                )
+            ),
+            id="single item emty line before",
+        ),
+        pytest.param(
+            f"""# Contents
+- [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})
+""",
+            (
+                factories.IndexContentsListItemFactory(
+                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                )
+            ),
+            id="single item emty line after",
         ),
         pytest.param(
             f"""# Contents
@@ -277,6 +374,52 @@ def _test__get_contents_list_items_parameters():
                 ),
             ),
             id="multiple items nested",
+        ),
+        pytest.param(
+            f"""# Contents
+- [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})
+ - [{(title_2 := 'title 2')}]({(value_2 := 'value 2')})
+""",
+            (
+                factories.IndexContentsListItemFactory(
+                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                ),
+                factories.IndexContentsListItemFactory(
+                    hierarchy=1, reference_title=title_2, reference_value=value_2, rank=2
+                ),
+            ),
+            id="multiple items nested alternate spacing single space",
+        ),
+        pytest.param(
+            f"""# Contents
+- [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})
+    - [{(title_2 := 'title 2')}]({(value_2 := 'value 2')})
+""",
+            (
+                factories.IndexContentsListItemFactory(
+                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                ),
+                factories.IndexContentsListItemFactory(
+                    hierarchy=1, reference_title=title_2, reference_value=value_2, rank=2
+                ),
+            ),
+            id="multiple items nested alternate spacing four spaces",
+        ),
+        pytest.param(
+            f"""# Contents
+- [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})
+
+- [{(title_2 := 'title 2')}]({(value_2 := 'value 2')})
+""",
+            (
+                factories.IndexContentsListItemFactory(
+                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                ),
+                factories.IndexContentsListItemFactory(
+                    hierarchy=0, reference_title=title_2, reference_value=value_2, rank=2
+                ),
+            ),
+            id="multiple items empty line middle",
         ),
         pytest.param(
             f"""# Contents
@@ -387,6 +530,63 @@ def _test__get_contents_list_items_parameters():
                 ),
             ),
             id="many items deeply nested",
+        ),
+        pytest.param(
+            f"""# Contents
+- [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})
+ - [{(title_2 := 'title 2')}]({(value_2 := 'value 2')})
+  - [{(title_3 := 'title 3')}]({(value_3 := 'value 3')})
+""",
+            (
+                factories.IndexContentsListItemFactory(
+                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                ),
+                factories.IndexContentsListItemFactory(
+                    hierarchy=1, reference_title=title_2, reference_value=value_2, rank=2
+                ),
+                factories.IndexContentsListItemFactory(
+                    hierarchy=2, reference_title=title_3, reference_value=value_3, rank=3
+                ),
+            ),
+            id="many items deeply nested alternate spacing",
+        ),
+        pytest.param(
+            f"""# Contents
+- [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})
+ - [{(title_2 := 'title 2')}]({(value_2 := 'value 2')})
+   - [{(title_3 := 'title 3')}]({(value_3 := 'value 3')})
+""",
+            (
+                factories.IndexContentsListItemFactory(
+                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                ),
+                factories.IndexContentsListItemFactory(
+                    hierarchy=1, reference_title=title_2, reference_value=value_2, rank=2
+                ),
+                factories.IndexContentsListItemFactory(
+                    hierarchy=2, reference_title=title_3, reference_value=value_3, rank=3
+                ),
+            ),
+            id="many items deeply nested alternate spacing mixed",
+        ),
+        pytest.param(
+            f"""# Contents
+- [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})
+  - [{(title_2 := 'title 2')}]({(value_2 := 'value 2')})
+   - [{(title_3 := 'title 3')}]({(value_3 := 'value 3')})
+""",
+            (
+                factories.IndexContentsListItemFactory(
+                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                ),
+                factories.IndexContentsListItemFactory(
+                    hierarchy=1, reference_title=title_2, reference_value=value_2, rank=2
+                ),
+                factories.IndexContentsListItemFactory(
+                    hierarchy=2, reference_title=title_3, reference_value=value_3, rank=3
+                ),
+            ),
+            id="many items deeply nested alternate spacing alternate mixed",
         ),
     ]
 
