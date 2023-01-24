@@ -124,16 +124,16 @@ def _parse_item_from_line(line: str, rank: int) -> _ParsedListItem:
             f"invalid, {line=!r}, expecting regex: {_ITEM}"
         )
 
-    whitespace_count = len(match.groups(0))
+    whitespace_count = len(match.group(1))
 
-    if whitespace_count != rank == 0:
+    if whitespace_count != 0 and rank == 0:
         raise InputError(
             f"An item in the contents of the index file at {DOCUMENTATION_INDEX_FILENAME} is "
             f"invalid, {line=!r}, expecting the first line not to have any leading whitespace"
         )
 
-    reference_title = match.groups(3)
-    reference_value = match.groups(4)
+    reference_title = match.group(7)
+    reference_value = match.group(8)
 
     return _ParsedListItem(
         whitespace_count=whitespace_count,
@@ -156,12 +156,14 @@ def _get_contents_parsed_list_items(index_file: IndexFile) -> typing.Iterator[_P
         return
 
     # Get the lines of the contents section
-    lines = iter(index_file.content.splitlines())
+    lines = index_file.content.splitlines()
     # Advance past the contents heading
     lines_from_contents = itertools.dropwhile(lambda line: line.lower() != "# contents", lines)
-    next(lines_from_contents)
+    next(lines_from_contents, None)
     # Stop taking on the next heading
-    contents_lines = itertools.takewhile(lambda line: line.startswith("#"), lines_from_contents)
+    contents_lines = itertools.takewhile(
+        lambda line: not line.startswith("#"), lines_from_contents
+    )
     # Remove empty lines
     contents_lines = filter(None, contents_lines)
 
