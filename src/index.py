@@ -3,12 +3,13 @@
 
 """Execute the uploading of documentation."""
 
+import typing
 from pathlib import Path
 
 from .discourse import Discourse
 from .exceptions import DiscourseError, ServerError
 from .reconcile import NAVIGATION_TABLE_START
-from .types_ import Index, IndexFile, Metadata, Page
+from .types_ import Index, IndexContentsListItem, IndexFile, Metadata, Page
 
 DOCUMENTATION_FOLDER_NAME = "docs"
 DOCUMENTATION_INDEX_FILENAME = "index.md"
@@ -78,3 +79,14 @@ def contents_from_page(page: str) -> str:
     """
     contents = page.split(NAVIGATION_TABLE_START)
     return contents[0]
+
+
+def _get_contents_list_items(index_file: IndexFile) -> typing.Iterator[IndexContentsListItem]:
+    """Get the items from the contents list of the index file.
+
+    Args:
+        index_file: The index file to read the contents from.
+
+    Yields:
+        All the items on the contents list in the index file.
+    """

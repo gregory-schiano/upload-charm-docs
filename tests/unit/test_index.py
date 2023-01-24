@@ -14,6 +14,7 @@ import pytest
 from src import discourse, index, types_
 from src.exceptions import DiscourseError, ServerError
 
+from .. import factories
 from .helpers import assert_substrings_in_string
 
 
@@ -157,3 +158,250 @@ def test_get_contents_from_page(page: str, expected_content: str):
     assert: contents without navigation table is returned.
     """
     assert index.contents_from_page(page=page) == expected_content
+
+
+# Trying something new which may be worthwhile to roll out to the rest of the repo to limit the
+# scope of variables in the parametrized tests
+
+
+def _test__get_contents_list_items_parameters():
+    """Generate parameters for the test__get_contents_list_items test."""
+    return [
+        pytest.param(
+            None,
+            (),
+            id="missing file",
+        ),
+        pytest.param(
+            "",
+            (),
+            id="empty file",
+        ),
+        pytest.param(
+            f"""# Contents
+- [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})""",
+            (
+                factories.IndexContentsListItemFactory(
+                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                )
+            ),
+            id="single item",
+        ),
+        pytest.param(
+            f"""# Contents
+1. [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})""",
+            (
+                factories.IndexContentsListItemFactory(
+                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                )
+            ),
+            id="single item numbered",
+        ),
+        pytest.param(
+            f"""# Contents
+* [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})""",
+            (
+                factories.IndexContentsListItemFactory(
+                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                )
+            ),
+            id="single item star",
+        ),
+        pytest.param(
+            f"""# Other content
+- [other title 1](other value 1)
+
+# Contents
+- [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})""",
+            (
+                factories.IndexContentsListItemFactory(
+                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                )
+            ),
+            id="single item content before",
+        ),
+        pytest.param(
+            f"""# Contents
+- [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})
+
+# Other content
+- [other title 1](other value 1)
+""",
+            (
+                factories.IndexContentsListItemFactory(
+                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                )
+            ),
+            id="single item content after",
+        ),
+        pytest.param(
+            f"""# Contents
+- [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})
+
+# Contents
+- [other title 1](other value 1)
+""",
+            (
+                factories.IndexContentsListItemFactory(
+                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                )
+            ),
+            id="single item content after with duplicate heading",
+        ),
+        pytest.param(
+            f"""# Contents
+- [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})
+- [{(title_2 := 'title 2')}]({(value_2 := 'value 2')})
+""",
+            (
+                factories.IndexContentsListItemFactory(
+                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                ),
+                factories.IndexContentsListItemFactory(
+                    hierarchy=0, reference_title=title_2, reference_value=value_2, rank=2
+                ),
+            ),
+            id="multiple items flat",
+        ),
+        pytest.param(
+            f"""# Contents
+- [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})
+  - [{(title_2 := 'title 2')}]({(value_2 := 'value 2')})
+""",
+            (
+                factories.IndexContentsListItemFactory(
+                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                ),
+                factories.IndexContentsListItemFactory(
+                    hierarchy=1, reference_title=title_2, reference_value=value_2, rank=2
+                ),
+            ),
+            id="multiple items nested",
+        ),
+        pytest.param(
+            f"""# Contents
+- [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})
+  1. [{(title_2 := 'title 2')}]({(value_2 := 'value 2')})
+""",
+            (
+                factories.IndexContentsListItemFactory(
+                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                ),
+                factories.IndexContentsListItemFactory(
+                    hierarchy=1, reference_title=title_2, reference_value=value_2, rank=2
+                ),
+            ),
+            id="multiple items nested alternate leader",
+        ),
+        pytest.param(
+            f"""# Contents
+- [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})
+- [{(title_2 := 'title 2')}]({(value_2 := 'value 2')})
+- [{(title_3 := 'title 3')}]({(value_3 := 'value 3')})
+""",
+            (
+                factories.IndexContentsListItemFactory(
+                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                ),
+                factories.IndexContentsListItemFactory(
+                    hierarchy=0, reference_title=title_2, reference_value=value_2, rank=2
+                ),
+                factories.IndexContentsListItemFactory(
+                    hierarchy=0, reference_title=title_3, reference_value=value_3, rank=3
+                ),
+            ),
+            id="many items flat",
+        ),
+        pytest.param(
+            f"""# Contents
+- [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})
+  - [{(title_2 := 'title 2')}]({(value_2 := 'value 2')})
+- [{(title_3 := 'title 3')}]({(value_3 := 'value 3')})
+""",
+            (
+                factories.IndexContentsListItemFactory(
+                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                ),
+                factories.IndexContentsListItemFactory(
+                    hierarchy=1, reference_title=title_2, reference_value=value_2, rank=2
+                ),
+                factories.IndexContentsListItemFactory(
+                    hierarchy=0, reference_title=title_3, reference_value=value_3, rank=3
+                ),
+            ),
+            id="many items second nested",
+        ),
+        pytest.param(
+            f"""# Contents
+- [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})
+- [{(title_2 := 'title 2')}]({(value_2 := 'value 2')})
+  - [{(title_3 := 'title 3')}]({(value_3 := 'value 3')})
+""",
+            (
+                factories.IndexContentsListItemFactory(
+                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                ),
+                factories.IndexContentsListItemFactory(
+                    hierarchy=0, reference_title=title_2, reference_value=value_2, rank=2
+                ),
+                factories.IndexContentsListItemFactory(
+                    hierarchy=1, reference_title=title_3, reference_value=value_3, rank=3
+                ),
+            ),
+            id="many items last nested",
+        ),
+        pytest.param(
+            f"""# Contents
+- [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})
+  - [{(title_2 := 'title 2')}]({(value_2 := 'value 2')})
+  - [{(title_3 := 'title 3')}]({(value_3 := 'value 3')})
+""",
+            (
+                factories.IndexContentsListItemFactory(
+                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                ),
+                factories.IndexContentsListItemFactory(
+                    hierarchy=1, reference_title=title_2, reference_value=value_2, rank=2
+                ),
+                factories.IndexContentsListItemFactory(
+                    hierarchy=1, reference_title=title_3, reference_value=value_3, rank=3
+                ),
+            ),
+            id="many items nested",
+        ),
+        pytest.param(
+            f"""# Contents
+- [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})
+  - [{(title_2 := 'title 2')}]({(value_2 := 'value 2')})
+    - [{(title_3 := 'title 3')}]({(value_3 := 'value 3')})
+""",
+            (
+                factories.IndexContentsListItemFactory(
+                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                ),
+                factories.IndexContentsListItemFactory(
+                    hierarchy=1, reference_title=title_2, reference_value=value_2, rank=2
+                ),
+                factories.IndexContentsListItemFactory(
+                    hierarchy=2, reference_title=title_3, reference_value=value_3, rank=3
+                ),
+            ),
+            id="many items deeply nested",
+        ),
+    ]
+
+
+@pytest.mark.parametrize("content, expected_items", _test__get_contents_list_items_parameters())
+def test__get_contents_list_items(
+    content: str, expected_items: tuple[types_.IndexContentsListItem, ...]
+):
+    """
+    arrange: given the index file contents
+    act: when get_contents_list_items is called with the index file
+    assert: then the expected contents list items are returned.
+    """
+    index_file = types_.IndexFile(title="title 1", content=content)
+
+    returned_items = tuple(index._get_contents_list_items(index_file=index_file))
+
+    assert returned_items == expected_items
