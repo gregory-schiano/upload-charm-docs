@@ -10,7 +10,7 @@ from pathlib import Path
 
 import factory
 
-from src import types_
+from src import index, types_
 
 from . import types
 
@@ -147,18 +147,18 @@ class TableRowFactory(factory.Factory):
 
 
 # The attributes of these classes are generators for the attributes of the meta class
-class IndexContentsListItemFactory(factory.Factory):
+class IndexParsedListItemFactory(factory.Factory):
     # Docstrings have been abbreviated for factories, checking for docstrings on model attributes
     # can be skipped.
-    """Generate IndexContentsListItems."""  # noqa: DCO060
+    """Generate index._ParsedListItems."""  # noqa: DCO060
 
     class Meta:
         """Configuration for factory."""  # noqa: DCO060
 
-        model = types_.IndexContentsListItem
+        model = index._ParsedListItem
         abstract = False
 
-    hierarchy = factory.Sequence(lambda n: n)
+    whitespace_count = factory.Sequence(lambda n: n)
     reference_title = factory.Sequence(lambda n: f"reference title {n}")
     reference_value = factory.Sequence(lambda n: f"reference value {n}")
     rank = factory.Sequence(lambda n: n)

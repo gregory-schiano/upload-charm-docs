@@ -3,16 +3,26 @@
 
 """Execute the uploading of documentation."""
 
+import itertools
+import re
 import typing
 from pathlib import Path
 
 from .discourse import Discourse
-from .exceptions import DiscourseError, ServerError
+from .exceptions import DiscourseError, InputError, ServerError
 from .reconcile import NAVIGATION_TABLE_START
 from .types_ import Index, IndexContentsListItem, IndexFile, Metadata, Page
 
 DOCUMENTATION_FOLDER_NAME = "docs"
 DOCUMENTATION_INDEX_FILENAME = "index.md"
+
+_WHITESPACE = "( *)"
+_LEADER = r"((\d\.)|(\*)|(-))"
+_REFERENCE_TITLE = r"\[(.*)\]"
+_REFERENCE_VALUE = r"\((.*)\)"
+_REFERENCE = rf"({_REFERENCE_TITLE}{_REFERENCE_VALUE})"
+_ITEM = rf"^{_WHITESPACE}{_LEADER}\s*{_REFERENCE}\s*$"
+_ITEM_PATTERN = re.compile(_ITEM)
 
 
 def _read_docs_index(base_path: Path) -> str | None:
@@ -81,7 +91,59 @@ def contents_from_page(page: str) -> str:
     return contents[0]
 
 
-def _get_contents_list_items(index_file: IndexFile) -> typing.Iterator[IndexContentsListItem]:
+class _ParsedListItem(typing.NamedTuple):
+    """Represents a parsed item in the contents table.
+
+    Attrs:
+        whitespace_count: The number of leading whitespace characters
+        reference_title: The name of the reference
+        reference_value: The link to the referenced item
+        rank: The number of preceding elements in the list
+    """
+
+    whitespace_count: int
+    reference_title: str
+    reference_value: str
+    rank: int
+
+
+def _parse_item_from_line(line: str, rank: int) -> _ParsedListItem:
+    """Parse an index list item from a contents line.
+
+    Args:
+        line: The contents line to parse.
+
+    Returns:
+        The parsed content item.
+    """
+    match = _ITEM_PATTERN.match(line)
+
+    if match is None:
+        raise InputError(
+            f"An item in the contents of the index file at {DOCUMENTATION_INDEX_FILENAME} is "
+            f"invalid, {line=!r}, expecting regex: {_ITEM}"
+        )
+
+    whitespace_count = len(match.groups(0))
+
+    if whitespace_count != rank == 0:
+        raise InputError(
+            f"An item in the contents of the index file at {DOCUMENTATION_INDEX_FILENAME} is "
+            f"invalid, {line=!r}, expecting the first line not to have any leading whitespace"
+        )
+
+    reference_title = match.groups(3)
+    reference_value = match.groups(4)
+
+    return _ParsedListItem(
+        whitespace_count=whitespace_count,
+        reference_title=reference_title,
+        reference_value=reference_value,
+        rank=rank,
+    )
+
+
+def _get_contents_parsed_list_items(index_file: IndexFile) -> typing.Iterator[_ParsedListItem]:
     """Get the items from the contents list of the index file.
 
     Args:
@@ -90,3 +152,19 @@ def _get_contents_list_items(index_file: IndexFile) -> typing.Iterator[IndexCont
     Yields:
         All the items on the contents list in the index file.
     """
+    if index_file.content is None:
+        return
+
+    # Get the lines of the contents section
+    lines = iter(index_file.content.splitlines())
+    # Advance past the contents heading
+    lines_from_contents = itertools.dropwhile(lambda line: line.lower() != "# contents", lines)
+    next(lines_from_contents)
+    # Stop taking on the next heading
+    contents_lines = itertools.takewhile(lambda line: line.startswith("#"), lines_from_contents)
+    # Remove empty lines
+    contents_lines = filter(None, contents_lines)
+
+    yield from map(
+        lambda line_rank: _parse_item_from_line(*line_rank), zip(contents_lines, itertools.count())
+    )

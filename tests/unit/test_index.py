@@ -165,8 +165,8 @@ def test_get_contents_from_page(page: str, expected_content: str):
 # scope of variables in the parametrized tests
 
 
-def _test__get_contents_list_items_invalid_parameters():
-    """Generate parameters for the test__get_contents_list_items_invalid test."""
+def _test__get_contents_parsed_list_items_invalid_parameters():
+    """Generate parameters for the test__get_contents_parsed_list_items_invalid test."""
     return [
         pytest.param(
             f"""# Contents
@@ -179,6 +179,12 @@ def _test__get_contents_list_items_invalid_parameters():
 {(line := '  - [title 1](value 1)')}""",
             (line,),
             id="first item has multiple leading space",
+        ),
+        pytest.param(
+            f"""# Contents
+{(line := '- [title 1](value 1)other')}""",
+            (line,),
+            id="first item trailing non-whitespace",
         ),
         pytest.param(
             f"""# Contents
@@ -211,9 +217,10 @@ malformed 2""",
 
 
 @pytest.mark.parametrize(
-    "content, expected_message_contents", _test__get_contents_list_items_invalid_parameters()
+    "content, expected_message_contents",
+    _test__get_contents_parsed_list_items_invalid_parameters(),
 )
-def test__get_contents_list_items_invalid(
+def test__get_contents_parsed_list_items_invalid(
     content: str, expected_message_contents: tuple[str, ...]
 ):
     """
@@ -224,7 +231,7 @@ def test__get_contents_list_items_invalid(
     index_file = types_.IndexFile(title="title 1", content=content)
 
     with pytest.raises(exceptions.InputError) as exc_info:
-        index._get_contents_list_items(index_file=index_file)
+        index._get_contents_parsed_list_items(index_file=index_file)
 
     assert_substrings_in_string(
         chain(
@@ -235,12 +242,12 @@ def test__get_contents_list_items_invalid(
             "index",
             index.DOCUMENTATION_INDEX_FILENAME,
         ),
-        str(exc_info.value),
+        str(exc_info.value).lower(),
     )
 
 
-def _test__get_contents_list_items_parameters():
-    """Generate parameters for the test__get_contents_list_items test."""
+def _test__get_contents_parsed_list_items_parameters():
+    """Generate parameters for the test__get_contents_parsed_list_items test."""
     return [
         pytest.param(
             None,
@@ -256,19 +263,49 @@ def _test__get_contents_list_items_parameters():
             f"""# Contents
 - [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})""",
             (
-                factories.IndexContentsListItemFactory(
-                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_title=title_1, reference_value=value_1, rank=1
                 )
             ),
             id="single item",
         ),
         pytest.param(
             f"""# Contents
+-  [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})""",
+            (
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_title=title_1, reference_value=value_1, rank=1
+                )
+            ),
+            id="single item multiple whitespace after leader",
+        ),
+        pytest.param(
+            f"""# Contents
+- [{(title_1 := 'title 1')}]({(value_1 := 'value 1')}) """,
+            (
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_title=title_1, reference_value=value_1, rank=1
+                )
+            ),
+            id="single item trailing whitespace",
+        ),
+        pytest.param(
+            f"""# Contents
+- [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})  """,
+            (
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_title=title_1, reference_value=value_1, rank=1
+                )
+            ),
+            id="single item multiple trailing whitespace",
+        ),
+        pytest.param(
+            f"""# Contents
 
 - [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})""",
             (
-                factories.IndexContentsListItemFactory(
-                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_title=title_1, reference_value=value_1, rank=1
                 )
             ),
             id="single item emty line before",
@@ -278,8 +315,8 @@ def _test__get_contents_list_items_parameters():
 - [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})
 """,
             (
-                factories.IndexContentsListItemFactory(
-                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_title=title_1, reference_value=value_1, rank=1
                 )
             ),
             id="single item emty line after",
@@ -288,8 +325,8 @@ def _test__get_contents_list_items_parameters():
             f"""# Contents
 1. [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})""",
             (
-                factories.IndexContentsListItemFactory(
-                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_title=title_1, reference_value=value_1, rank=1
                 )
             ),
             id="single item numbered",
@@ -298,8 +335,8 @@ def _test__get_contents_list_items_parameters():
             f"""# Contents
 * [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})""",
             (
-                factories.IndexContentsListItemFactory(
-                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_title=title_1, reference_value=value_1, rank=1
                 )
             ),
             id="single item star",
@@ -311,8 +348,8 @@ def _test__get_contents_list_items_parameters():
 # Contents
 - [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})""",
             (
-                factories.IndexContentsListItemFactory(
-                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_title=title_1, reference_value=value_1, rank=1
                 )
             ),
             id="single item content before",
@@ -325,8 +362,8 @@ def _test__get_contents_list_items_parameters():
 - [other title 1](other value 1)
 """,
             (
-                factories.IndexContentsListItemFactory(
-                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_title=title_1, reference_value=value_1, rank=1
                 )
             ),
             id="single item content after",
@@ -339,8 +376,8 @@ def _test__get_contents_list_items_parameters():
 - [other title 1](other value 1)
 """,
             (
-                factories.IndexContentsListItemFactory(
-                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_title=title_1, reference_value=value_1, rank=1
                 )
             ),
             id="single item content after with duplicate heading",
@@ -351,11 +388,11 @@ def _test__get_contents_list_items_parameters():
 - [{(title_2 := 'title 2')}]({(value_2 := 'value 2')})
 """,
             (
-                factories.IndexContentsListItemFactory(
-                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_title=title_1, reference_value=value_1, rank=1
                 ),
-                factories.IndexContentsListItemFactory(
-                    hierarchy=0, reference_title=title_2, reference_value=value_2, rank=2
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_title=title_2, reference_value=value_2, rank=2
                 ),
             ),
             id="multiple items flat",
@@ -366,11 +403,11 @@ def _test__get_contents_list_items_parameters():
   - [{(title_2 := 'title 2')}]({(value_2 := 'value 2')})
 """,
             (
-                factories.IndexContentsListItemFactory(
-                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_title=title_1, reference_value=value_1, rank=1
                 ),
-                factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_2, reference_value=value_2, rank=2
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=1, reference_title=title_2, reference_value=value_2, rank=2
                 ),
             ),
             id="multiple items nested",
@@ -381,11 +418,11 @@ def _test__get_contents_list_items_parameters():
  - [{(title_2 := 'title 2')}]({(value_2 := 'value 2')})
 """,
             (
-                factories.IndexContentsListItemFactory(
-                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_title=title_1, reference_value=value_1, rank=1
                 ),
-                factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_2, reference_value=value_2, rank=2
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=1, reference_title=title_2, reference_value=value_2, rank=2
                 ),
             ),
             id="multiple items nested alternate spacing single space",
@@ -396,11 +433,11 @@ def _test__get_contents_list_items_parameters():
     - [{(title_2 := 'title 2')}]({(value_2 := 'value 2')})
 """,
             (
-                factories.IndexContentsListItemFactory(
-                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_title=title_1, reference_value=value_1, rank=1
                 ),
-                factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_2, reference_value=value_2, rank=2
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=1, reference_title=title_2, reference_value=value_2, rank=2
                 ),
             ),
             id="multiple items nested alternate spacing four spaces",
@@ -412,11 +449,11 @@ def _test__get_contents_list_items_parameters():
 - [{(title_2 := 'title 2')}]({(value_2 := 'value 2')})
 """,
             (
-                factories.IndexContentsListItemFactory(
-                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_title=title_1, reference_value=value_1, rank=1
                 ),
-                factories.IndexContentsListItemFactory(
-                    hierarchy=0, reference_title=title_2, reference_value=value_2, rank=2
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_title=title_2, reference_value=value_2, rank=2
                 ),
             ),
             id="multiple items empty line middle",
@@ -427,11 +464,11 @@ def _test__get_contents_list_items_parameters():
   1. [{(title_2 := 'title 2')}]({(value_2 := 'value 2')})
 """,
             (
-                factories.IndexContentsListItemFactory(
-                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_title=title_1, reference_value=value_1, rank=1
                 ),
-                factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_2, reference_value=value_2, rank=2
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=1, reference_title=title_2, reference_value=value_2, rank=2
                 ),
             ),
             id="multiple items nested alternate leader",
@@ -443,14 +480,14 @@ def _test__get_contents_list_items_parameters():
 - [{(title_3 := 'title 3')}]({(value_3 := 'value 3')})
 """,
             (
-                factories.IndexContentsListItemFactory(
-                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_title=title_1, reference_value=value_1, rank=1
                 ),
-                factories.IndexContentsListItemFactory(
-                    hierarchy=0, reference_title=title_2, reference_value=value_2, rank=2
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_title=title_2, reference_value=value_2, rank=2
                 ),
-                factories.IndexContentsListItemFactory(
-                    hierarchy=0, reference_title=title_3, reference_value=value_3, rank=3
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_title=title_3, reference_value=value_3, rank=3
                 ),
             ),
             id="many items flat",
@@ -462,14 +499,14 @@ def _test__get_contents_list_items_parameters():
 - [{(title_3 := 'title 3')}]({(value_3 := 'value 3')})
 """,
             (
-                factories.IndexContentsListItemFactory(
-                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_title=title_1, reference_value=value_1, rank=1
                 ),
-                factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_2, reference_value=value_2, rank=2
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=1, reference_title=title_2, reference_value=value_2, rank=2
                 ),
-                factories.IndexContentsListItemFactory(
-                    hierarchy=0, reference_title=title_3, reference_value=value_3, rank=3
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_title=title_3, reference_value=value_3, rank=3
                 ),
             ),
             id="many items second nested",
@@ -481,14 +518,14 @@ def _test__get_contents_list_items_parameters():
   - [{(title_3 := 'title 3')}]({(value_3 := 'value 3')})
 """,
             (
-                factories.IndexContentsListItemFactory(
-                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_title=title_1, reference_value=value_1, rank=1
                 ),
-                factories.IndexContentsListItemFactory(
-                    hierarchy=0, reference_title=title_2, reference_value=value_2, rank=2
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_title=title_2, reference_value=value_2, rank=2
                 ),
-                factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_3, reference_value=value_3, rank=3
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=1, reference_title=title_3, reference_value=value_3, rank=3
                 ),
             ),
             id="many items last nested",
@@ -500,14 +537,14 @@ def _test__get_contents_list_items_parameters():
   - [{(title_3 := 'title 3')}]({(value_3 := 'value 3')})
 """,
             (
-                factories.IndexContentsListItemFactory(
-                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_title=title_1, reference_value=value_1, rank=1
                 ),
-                factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_2, reference_value=value_2, rank=2
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=1, reference_title=title_2, reference_value=value_2, rank=2
                 ),
-                factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_3, reference_value=value_3, rank=3
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=1, reference_title=title_3, reference_value=value_3, rank=3
                 ),
             ),
             id="many items nested",
@@ -519,14 +556,14 @@ def _test__get_contents_list_items_parameters():
     - [{(title_3 := 'title 3')}]({(value_3 := 'value 3')})
 """,
             (
-                factories.IndexContentsListItemFactory(
-                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_title=title_1, reference_value=value_1, rank=1
                 ),
-                factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_2, reference_value=value_2, rank=2
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=1, reference_title=title_2, reference_value=value_2, rank=2
                 ),
-                factories.IndexContentsListItemFactory(
-                    hierarchy=2, reference_title=title_3, reference_value=value_3, rank=3
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=2, reference_title=title_3, reference_value=value_3, rank=3
                 ),
             ),
             id="many items deeply nested",
@@ -538,14 +575,14 @@ def _test__get_contents_list_items_parameters():
   - [{(title_3 := 'title 3')}]({(value_3 := 'value 3')})
 """,
             (
-                factories.IndexContentsListItemFactory(
-                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_title=title_1, reference_value=value_1, rank=1
                 ),
-                factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_2, reference_value=value_2, rank=2
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=1, reference_title=title_2, reference_value=value_2, rank=2
                 ),
-                factories.IndexContentsListItemFactory(
-                    hierarchy=2, reference_title=title_3, reference_value=value_3, rank=3
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=2, reference_title=title_3, reference_value=value_3, rank=3
                 ),
             ),
             id="many items deeply nested alternate spacing",
@@ -557,14 +594,14 @@ def _test__get_contents_list_items_parameters():
    - [{(title_3 := 'title 3')}]({(value_3 := 'value 3')})
 """,
             (
-                factories.IndexContentsListItemFactory(
-                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_title=title_1, reference_value=value_1, rank=1
                 ),
-                factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_2, reference_value=value_2, rank=2
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=1, reference_title=title_2, reference_value=value_2, rank=2
                 ),
-                factories.IndexContentsListItemFactory(
-                    hierarchy=2, reference_title=title_3, reference_value=value_3, rank=3
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=2, reference_title=title_3, reference_value=value_3, rank=3
                 ),
             ),
             id="many items deeply nested alternate spacing mixed",
@@ -576,14 +613,14 @@ def _test__get_contents_list_items_parameters():
    - [{(title_3 := 'title 3')}]({(value_3 := 'value 3')})
 """,
             (
-                factories.IndexContentsListItemFactory(
-                    hierarchy=0, reference_title=title_1, reference_value=value_1, rank=1
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_title=title_1, reference_value=value_1, rank=1
                 ),
-                factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_2, reference_value=value_2, rank=2
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=1, reference_title=title_2, reference_value=value_2, rank=2
                 ),
-                factories.IndexContentsListItemFactory(
-                    hierarchy=2, reference_title=title_3, reference_value=value_3, rank=3
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=2, reference_title=title_3, reference_value=value_3, rank=3
                 ),
             ),
             id="many items deeply nested alternate spacing alternate mixed",
@@ -591,8 +628,10 @@ def _test__get_contents_list_items_parameters():
     ]
 
 
-@pytest.mark.parametrize("content, expected_items", _test__get_contents_list_items_parameters())
-def test__get_contents_list_items(
+@pytest.mark.parametrize(
+    "content, expected_items", _test__get_contents_parsed_list_items_parameters()
+)
+def test__get_contents_parsed_list_items(
     content: str, expected_items: tuple[types_.IndexContentsListItem, ...]
 ):
     """
@@ -602,6 +641,6 @@ def test__get_contents_list_items(
     """
     index_file = types_.IndexFile(title="title 1", content=content)
 
-    returned_items = tuple(index._get_contents_list_items(index_file=index_file))
+    returned_items = tuple(index._get_contents_parsed_list_items(index_file=index_file))
 
     assert returned_items == expected_items
