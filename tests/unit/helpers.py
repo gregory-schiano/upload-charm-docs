@@ -62,3 +62,23 @@ def get_discourse_topic_url() -> str:
         A topic url for discourse.
     """
     return f"{get_discourse_base_path()}{_URL_PATH_PREFIX}slug/1"
+
+
+def create_file(path: str, base: Path) -> None:
+    """Create a file within a base directory.
+
+    Args:
+        path: The relative path to the file to be created.
+        base: The base path to which the relative file path is appended.
+    """
+    (base / path).touch()
+
+
+def create_dir(path: str, base: Path) -> None:
+    """Create a directory within a base directory.
+
+    Args:
+        path: The relative path to the directory to be created.
+        base: The base path to which the relative directory path is appended.
+    """
+    (base / path).mkdir(parents=True)

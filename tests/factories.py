@@ -161,3 +161,21 @@ class IndexParsedListItemFactory(factory.Factory):
     reference_title = factory.Sequence(lambda n: f"reference title {n}")
     reference_value = factory.Sequence(lambda n: f"reference value {n}")
     rank = factory.Sequence(lambda n: n)
+
+
+# The attributes of these classes are generators for the attributes of the meta class
+class IndexContentsListItemFactory(factory.Factory):
+    # Docstrings have been abbreviated for factories, checking for docstrings on model attributes
+    # can be skipped.
+    """Generate types.IndexContentsListItems."""  # noqa: DCO060
+
+    class Meta:
+        """Configuration for factory."""  # noqa: DCO060
+
+        model = types_.IndexContentsListItem
+        abstract = False
+
+    hierarchy = factory.Sequence(lambda n: n)
+    reference_title = factory.Sequence(lambda n: f"reference title {n}")
+    reference_value = factory.Sequence(lambda n: f"reference value {n}")
+    rank = factory.Sequence(lambda n: n)

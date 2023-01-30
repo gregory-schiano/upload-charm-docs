@@ -175,7 +175,7 @@ def _get_contents_parsed_list_items(index_file: IndexFile) -> typing.Iterator[_P
 
 
 def _calculate_hierarchy(
-    parsed_items: peekable[_ParsedListItem],
+    parsed_items: "peekable[_ParsedListItem]",
     base_dir: Path,
     aggregate_dir: Path = Path(),
     hierarchy=0,
@@ -196,7 +196,7 @@ def _calculate_hierarchy(
     while next_item := parsed_items.peek(default=None):
         # All items in the current directory have been processed
         if next_item.whitespace_count < whitespace_expectation:
-            raise StopIteration
+            return
 
         # Check that the whitespace count matches the expectation
         if next_item.whitespace_count > whitespace_expectation:
@@ -247,6 +247,7 @@ def _calculate_hierarchy(
                     parsed_items=parsed_items,
                     base_dir=base_dir,
                     aggregate_dir=item_path,
+                    hierarchy=hierarchy + 1,
                     whitespace_expectation=next_item.whitespace_count,
                 )
         else:
