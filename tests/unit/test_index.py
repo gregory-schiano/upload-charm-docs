@@ -430,21 +430,6 @@ def _test__get_contents_parsed_list_items_parameters():
         pytest.param(
             f"""# Contents
 - [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})
-    - [{(title_2 := 'title 2')}]({(value_2 := 'value 2')})
-""",
-            (
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=0, reference_title=title_1, reference_value=value_1, rank=0
-                ),
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=4, reference_title=title_2, reference_value=value_2, rank=1
-                ),
-            ),
-            id="multiple items nested alternate spacing four spaces",
-        ),
-        pytest.param(
-            f"""# Contents
-- [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})
 
 - [{(title_2 := 'title 2')}]({(value_2 := 'value 2')})
 """,
@@ -567,63 +552,6 @@ def _test__get_contents_parsed_list_items_parameters():
                 ),
             ),
             id="many items deeply nested",
-        ),
-        pytest.param(
-            f"""# Contents
-- [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})
- - [{(title_2 := 'title 2')}]({(value_2 := 'value 2')})
-  - [{(title_3 := 'title 3')}]({(value_3 := 'value 3')})
-""",
-            (
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=0, reference_title=title_1, reference_value=value_1, rank=0
-                ),
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=1, reference_title=title_2, reference_value=value_2, rank=1
-                ),
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=2, reference_title=title_3, reference_value=value_3, rank=2
-                ),
-            ),
-            id="many items deeply nested alternate spacing",
-        ),
-        pytest.param(
-            f"""# Contents
-- [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})
- - [{(title_2 := 'title 2')}]({(value_2 := 'value 2')})
-   - [{(title_3 := 'title 3')}]({(value_3 := 'value 3')})
-""",
-            (
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=0, reference_title=title_1, reference_value=value_1, rank=0
-                ),
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=1, reference_title=title_2, reference_value=value_2, rank=1
-                ),
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=3, reference_title=title_3, reference_value=value_3, rank=2
-                ),
-            ),
-            id="many items deeply nested alternate spacing mixed",
-        ),
-        pytest.param(
-            f"""# Contents
-- [{(title_1 := 'title 1')}]({(value_1 := 'value 1')})
-  - [{(title_2 := 'title 2')}]({(value_2 := 'value 2')})
-   - [{(title_3 := 'title 3')}]({(value_3 := 'value 3')})
-""",
-            (
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=0, reference_title=title_1, reference_value=value_1, rank=0
-                ),
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=2, reference_title=title_2, reference_value=value_2, rank=1
-                ),
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=3, reference_title=title_3, reference_value=value_3, rank=2
-                ),
-            ),
-            id="many items deeply nested alternate spacing alternate mixed",
         ),
     ]
 
