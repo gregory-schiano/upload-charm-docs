@@ -8,6 +8,8 @@ import re
 import typing
 from pathlib import Path
 
+from more_itertools import peekable
+
 from .discourse import Discourse
 from .exceptions import DiscourseError, InputError, ServerError
 from .reconcile import NAVIGATION_TABLE_START
@@ -170,3 +172,82 @@ def _get_contents_parsed_list_items(index_file: IndexFile) -> typing.Iterator[_P
     yield from map(
         lambda line_rank: _parse_item_from_line(*line_rank), zip(contents_lines, itertools.count())
     )
+
+
+def _calculate_hierarchy(
+    parsed_items: peekable[_ParsedListItem],
+    base_dir: Path,
+    aggregate_dir: Path = Path(),
+    hierarchy=0,
+    whitespace_expectation=0,
+) -> typing.Iterator[IndexContentsListItem]:
+    """Calculate the hierarchy of the contents list items.
+
+    Args:
+        parsed_items: The parsed items from the contents list in the index file.
+        base_dir: The base directory of all items.
+        aggregate_dir: The relative directory that all items must be within.
+        hierarchy: The hierarchy of the current directory.
+        whitespace_expectation: The expected number of whitespace characters for items.
+
+    Yields:
+        The contents list items with the hierarchy.
+    """
+    while next_item := parsed_items.peek(default=None):
+        # All items in the current directory have been processed
+        if next_item.whitespace_count < whitespace_expectation:
+            raise StopIteration
+
+        # Check that the whitespace count matches the expectation
+        if next_item.whitespace_count > whitespace_expectation:
+            raise InputError(
+                "An item has more whitespace and is not following a reference to a directory. "
+                f"{next_item=!r}, expected whitespace count: {whitespace_expectation!r}"
+            )
+
+        # Check that the next item is within the directory
+        next_item_path = Path(next_item.reference_value)
+        try:
+            next_item_to_aggregate_path = next_item_path.relative_to(aggregate_dir)
+        except ValueError:
+            raise InputError(
+                "A nested item is a reference to a path that is not within the directory of its "
+                f"parent. {next_item=!r}, expected parent path: {aggregate_dir!r}"
+            )
+        # Check that the item is directly within the current directory
+        if len(next_item_to_aggregate_path.parents) != 1:
+            raise InputError(
+                "A nested item is a reference to a path that is not immediately within the "
+                f"directory of its parent. {next_item=!r}, expected parent path: {aggregate_dir!r}"
+            )
+
+        # Advance the iterator
+        item = next(parsed_items)
+        item_path = Path(item.reference_value)
+        next_item = parsed_items.peek(default=None)
+
+        # Process file
+        if (base_dir / item_path).is_file():
+            yield IndexContentsListItem(
+                hierarchy=hierarchy + 1,
+                reference_title=item.reference_title,
+                reference_value=item.reference_value,
+                rank=item.rank,
+            )
+        # Process directory
+        elif (base_dir / item_path).is_dir():
+            yield IndexContentsListItem(
+                hierarchy=hierarchy + 1,
+                reference_title=item.reference_title,
+                reference_value=item.reference_value,
+                rank=item.rank,
+            )
+            if next_item is not None and next_item.whitespace_count > whitespace_expectation:
+                yield from _calculate_hierarchy(
+                    parsed_items=parsed_items,
+                    base_dir=base_dir,
+                    aggregate_dir=item_path,
+                    whitespace_expectation=next_item.whitespace_count,
+                )
+        else:
+            raise InputError(f"An item is not a file or directory. {item=!r}")
