@@ -168,7 +168,11 @@ def test_get_contents_from_page(page: str, expected_content: str):
 
 
 def _test__get_contents_parsed_list_items_invalid_parameters():
-    """Generate parameters for the test__get_contents_parsed_list_items_invalid test."""
+    """Generate parameters for the test__get_contents_parsed_list_items_invalid test.
+
+    Returns:
+        The tests.
+    """
     return [
         pytest.param(
             f"""# Contents
@@ -249,7 +253,11 @@ def test__get_contents_parsed_list_items_invalid(
 
 
 def _test__get_contents_parsed_list_items_parameters():
-    """Generate parameters for the test__get_contents_parsed_list_items test."""
+    """Generate parameters for the test__get_contents_parsed_list_items test.
+
+    Returns:
+        The tests.
+    """
     return [
         pytest.param(
             None,
@@ -577,7 +585,11 @@ def test__get_contents_parsed_list_items(
 
 
 def _test__calculate_hierarchy_invalid_parameters():
-    """Generate parameters for the test__calculate_hierarchy_invalid test."""
+    """Generate parameters for the test__calculate_hierarchy_invalid test.
+
+    Returns:
+        The tests.
+    """
     return [
         pytest.param(
             (
@@ -766,7 +778,11 @@ def test__calculate_hierarchy_invalid(
 
 
 def _test__calculate_hierarchy_parameters():
-    """Generate parameters for the test__calculate_hierarchy test."""
+    """Generate parameters for the test__calculate_hierarchy test.
+
+    Returns:
+        The tests.
+    """
     return [
         pytest.param((), (), (), id="empty"),
         pytest.param(
@@ -1072,7 +1088,7 @@ def _test__calculate_hierarchy_parameters():
                 factories.IndexParsedListItemFactory(
                     whitespace_count=0,
                     reference_title=(title_3 := "title 3"),
-                    reference_value=(value_3 := f"file_3.md"),
+                    reference_value=(value_3 := "file_3.md"),
                     rank=(rank_3 := 3),
                 ),
             ),

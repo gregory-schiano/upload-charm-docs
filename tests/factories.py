@@ -154,7 +154,8 @@ class IndexParsedListItemFactory(factory.Factory):
     class Meta:
         """Configuration for factory."""  # noqa: DCO060
 
-        model = index._ParsedListItem
+        # Need access to be able to generate instances
+        model = index._ParsedListItem  # pylint: disable=protected-access
         abstract = False
 
     whitespace_count = factory.Sequence(lambda n: n)
