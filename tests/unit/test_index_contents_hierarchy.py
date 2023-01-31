@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 from more_itertools import peekable
 
-from src import constants, docs_directory, exceptions, index, types_
+from src import constants, exceptions, index, types_
 
 from .. import factories
 from .helpers import assert_substrings_in_string, create_dir, create_file
