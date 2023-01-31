@@ -291,9 +291,7 @@ def _calculate_contents_hierarchy(
             raise InputError(f"An item is not a file or directory. {item=!r}")
 
 
-def get_contents_list(
-    index_file: IndexFile, base_dir: Path
-) -> typing.Iterator[IndexContentsListItem]:
+def get_contents(index_file: IndexFile, base_dir: Path) -> typing.Iterator[IndexContentsListItem]:
     """Get the contents list items from the index file.
 
     Args:
