@@ -287,3 +287,19 @@ def _calculate_hierarchy(
                 )
         else:
             raise InputError(f"An item is not a file or directory. {item=!r}")
+
+
+def get_contents_list(
+    index_file: IndexFile, base_dir: Path
+) -> typing.Iterator[IndexContentsListItem]:
+    """Get the contents list items from the index file.
+
+    Args:
+        index_file: The index file to read the contents from.
+        base_dir: The base directory of all items.
+
+    Returns:
+        Iterator with all items from the contents list.
+    """
+    parsed_items = _get_contents_parsed_list_items(index_file=index_file)
+    return _calculate_hierarchy(parsed_items=peekable(parsed_items), base_dir=base_dir)
