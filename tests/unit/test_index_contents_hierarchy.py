@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 from more_itertools import peekable
 
-from src import exceptions, index, types_
+from src import constants, docs_directory, exceptions, index, types_
 
 from .. import factories
 from .helpers import assert_substrings_in_string, create_dir, create_file
@@ -37,6 +37,19 @@ def _test__calculate_contents_hierarchy_invalid_parameters():
             (),
             ("not", "file or directory", repr(item)),
             id="file doesn't exist",
+        ),
+        pytest.param(
+            (
+                item := factories.IndexParsedListItemFactory(
+                    whitespace_count=0,
+                    reference_title="title 1",
+                    reference_value="file_1.txt",
+                    rank=1,
+                ),
+            ),
+            (create_file,),
+            ("not", "expected", "file type", constants.DOC_FILE_EXTENSION, repr(item)),
+            id="file wrong extension",
         ),
         pytest.param(
             (
@@ -239,6 +252,23 @@ def _test__calculate_contents_hierarchy_parameters():
                 ),
             ),
             id="single file",
+        ),
+        pytest.param(
+            (
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0,
+                    reference_title=(title := "title 1"),
+                    reference_value=(value := "file_1.MD"),
+                    rank=(rank := 1),
+                ),
+            ),
+            (create_file,),
+            (
+                factories.IndexContentsListItemFactory(
+                    hierarchy=1, reference_title=title, reference_value=value, rank=rank
+                ),
+            ),
+            id="single file upper case extension",
         ),
         pytest.param(
             (

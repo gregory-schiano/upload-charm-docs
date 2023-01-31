@@ -10,13 +10,14 @@ from pathlib import Path
 
 from more_itertools import peekable
 
+from .constants import DOC_FILE_EXTENSION
 from .discourse import Discourse
 from .exceptions import DiscourseError, InputError, ServerError
 from .reconcile import NAVIGATION_TABLE_START
 from .types_ import Index, IndexContentsListItem, IndexFile, Metadata, Page
 
 DOCUMENTATION_FOLDER_NAME = "docs"
-DOCUMENTATION_INDEX_FILENAME = "index.md"
+DOCUMENTATION_INDEX_FILENAME = f"index{DOC_FILE_EXTENSION}"
 
 _WHITESPACE = "( *)"
 _LEADER = r"((\d\.)|(\*)|(-))"
@@ -182,7 +183,7 @@ def _get_contents_parsed_items(index_file: IndexFile) -> typing.Iterator[_Parsed
 
 
 def _check_contents_item(
-    item: _ParsedListItem, whitespace_expectation: int, aggregate_dir: Path
+    item: _ParsedListItem, whitespace_expectation: int, aggregate_dir: Path, base_dir: Path
 ) -> None:
     """Check item is valid.
 
@@ -190,6 +191,7 @@ def _check_contents_item(
         item: The parsed item to check.
         aggregate_dir: The relative directory that all items must be within.
         whitespace_expectation: The expected number of whitespace characters for items.
+        base_dir: The base directory of all items.
 
     Raises:
         InputError:
@@ -213,12 +215,21 @@ def _check_contents_item(
             "A nested item is a reference to a path that is not within the directory of its "
             f"parent. {item=!r}, expected parent path: {aggregate_dir!r}"
         ) from exc
+
     # Check that the item is directly within the current directory
     if len(item_to_aggregate_path.parents) != 1:
         raise InputError(
             "A nested item is a reference to a path that is not immediately within the "
             f"directory of its parent. {item=!r}, expected parent path: {aggregate_dir!r}"
         )
+
+    # Check that if the item is a file, it has the correct extension
+    if (item_path := (base_dir / Path(item.reference_value))).is_file():
+        if item_path.suffix.lower() != DOC_FILE_EXTENSION:
+            raise InputError(
+                "An item in the contents list is not of the expected file type. "
+                f"{item=!r}, expected extension: {DOC_FILE_EXTENSION}"
+            )
 
 
 def _calculate_contents_hierarchy(
@@ -255,6 +266,7 @@ def _calculate_contents_hierarchy(
             item=next_item,
             whitespace_expectation=whitespace_expectation,
             aggregate_dir=aggregate_dir,
+            base_dir=base_dir,
         )
 
         # Advance the iterator
