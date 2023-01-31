@@ -3,14 +3,10 @@
 
 """Unit tests for run module."""
 
-# Need access to protected functions for testing
-# pylint: disable=protected-access
-
 import typing
 from pathlib import Path
 
 import pytest
-from more_itertools import peekable
 
 from src import index, types_
 
