@@ -310,7 +310,7 @@ def _test__get_contents_parsed_list_items_parameters():
                     whitespace_count=0, reference_title=title_1, reference_value=value_1, rank=0
                 ),
             ),
-            id="single item emty line before",
+            id="single item empty line before",
         ),
         pytest.param(
             f"""# Contents
@@ -321,7 +321,7 @@ def _test__get_contents_parsed_list_items_parameters():
                     whitespace_count=0, reference_title=title_1, reference_value=value_1, rank=0
                 ),
             ),
-            id="single item emty line after",
+            id="single item empty line after",
         ),
         pytest.param(
             f"""# Contents
