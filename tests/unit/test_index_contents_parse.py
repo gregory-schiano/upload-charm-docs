@@ -16,8 +16,8 @@ from .. import factories
 from .helpers import assert_substrings_in_string
 
 
-def _test__get_contents_parsed_list_items_invalid_parameters():
-    """Generate parameters for the test__get_contents_parsed_list_items_invalid test.
+def _test__get_contents_parsed_items_invalid_parameters():
+    """Generate parameters for the test__get_contents_parsed_items_invalid test.
 
     Returns:
         The tests.
@@ -73,9 +73,9 @@ malformed 2""",
 
 @pytest.mark.parametrize(
     "content, expected_message_contents",
-    _test__get_contents_parsed_list_items_invalid_parameters(),
+    _test__get_contents_parsed_items_invalid_parameters(),
 )
-def test__get_contents_parsed_list_items_invalid(
+def test__get_contents_parsed_items_invalid(
     content: str, expected_message_contents: tuple[str, ...]
 ):
     """
@@ -86,7 +86,7 @@ def test__get_contents_parsed_list_items_invalid(
     index_file = types_.IndexFile(title="title 1", content=content)
 
     with pytest.raises(exceptions.InputError) as exc_info:
-        tuple(index._get_contents_parsed_list_items(index_file=index_file))
+        tuple(index._get_contents_parsed_items(index_file=index_file))
 
     assert_substrings_in_string(
         chain(
@@ -101,8 +101,8 @@ def test__get_contents_parsed_list_items_invalid(
     )
 
 
-def _test__get_contents_parsed_list_items_parameters():
-    """Generate parameters for the test__get_contents_parsed_list_items test.
+def _test__get_contents_parsed_items_parameters():
+    """Generate parameters for the test__get_contents_parsed_items test.
 
     Returns:
         The tests.
@@ -415,10 +415,8 @@ def _test__get_contents_parsed_list_items_parameters():
     ]
 
 
-@pytest.mark.parametrize(
-    "content, expected_items", _test__get_contents_parsed_list_items_parameters()
-)
-def test__get_contents_parsed_list_items(
+@pytest.mark.parametrize("content, expected_items", _test__get_contents_parsed_items_parameters())
+def test__get_contents_parsed_items(
     content: str, expected_items: tuple[index._ParsedListItem, ...]
 ):
     """
@@ -428,6 +426,6 @@ def test__get_contents_parsed_list_items(
     """
     index_file = types_.IndexFile(title="title 1", content=content)
 
-    returned_items = tuple(index._get_contents_parsed_list_items(index_file=index_file))
+    returned_items = tuple(index._get_contents_parsed_items(index_file=index_file))
 
     assert returned_items == expected_items

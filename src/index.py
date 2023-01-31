@@ -151,7 +151,7 @@ def _parse_item_from_line(line: str, rank: int) -> _ParsedListItem:
     )
 
 
-def _get_contents_parsed_list_items(index_file: IndexFile) -> typing.Iterator[_ParsedListItem]:
+def _get_contents_parsed_items(index_file: IndexFile) -> typing.Iterator[_ParsedListItem]:
     """Get the items from the contents list of the index file.
 
     Args:
@@ -181,7 +181,9 @@ def _get_contents_parsed_list_items(index_file: IndexFile) -> typing.Iterator[_P
     )
 
 
-def _check_item(item: _ParsedListItem, whitespace_expectation: int, aggregate_dir: Path) -> None:
+def _check_contents_item(
+    item: _ParsedListItem, whitespace_expectation: int, aggregate_dir: Path
+) -> None:
     """Check item is valid.
 
     Args:
@@ -219,7 +221,7 @@ def _check_item(item: _ParsedListItem, whitespace_expectation: int, aggregate_di
         )
 
 
-def _calculate_hierarchy(
+def _calculate_contents_hierarchy(
     parsed_items: "peekable[_ParsedListItem]",
     base_dir: Path,
     aggregate_dir: Path = Path(),
@@ -249,7 +251,7 @@ def _calculate_hierarchy(
         if next_item.whitespace_count < whitespace_expectation:
             return
 
-        _check_item(
+        _check_contents_item(
             item=next_item,
             whitespace_expectation=whitespace_expectation,
             aggregate_dir=aggregate_dir,
@@ -278,7 +280,7 @@ def _calculate_hierarchy(
                 rank=item.rank,
             )
             if next_item is not None and next_item.whitespace_count > whitespace_expectation:
-                yield from _calculate_hierarchy(
+                yield from _calculate_contents_hierarchy(
                     parsed_items=parsed_items,
                     base_dir=base_dir,
                     aggregate_dir=item_path,
@@ -301,5 +303,5 @@ def get_contents_list(
     Returns:
         Iterator with all items from the contents list.
     """
-    parsed_items = _get_contents_parsed_list_items(index_file=index_file)
-    return _calculate_hierarchy(parsed_items=peekable(parsed_items), base_dir=base_dir)
+    parsed_items = _get_contents_parsed_items(index_file=index_file)
+    return _calculate_contents_hierarchy(parsed_items=peekable(parsed_items), base_dir=base_dir)
