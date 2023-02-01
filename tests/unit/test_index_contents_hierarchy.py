@@ -238,443 +238,445 @@ def _test__calculate_contents_hierarchy_parameters():
         pytest.param((), (), (), id="empty"),
         pytest.param(
             (
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=0,
-                    reference_title=(title := "title 1"),
-                    reference_value=(value := "file_1.md"),
-                    rank=(rank := 1),
+                item := factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_value=(value := "file_1.md")
                 ),
             ),
             (create_file,),
             (
                 factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title, reference_value=value, rank=rank
+                    hierarchy=1,
+                    reference_title=item.reference_title,
+                    reference_value=value,
+                    rank=item.rank,
                 ),
             ),
             id="single file",
         ),
         pytest.param(
             (
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=0,
-                    reference_title=(title := "title 1"),
-                    reference_value=(value := "file_1.MD"),
-                    rank=(rank := 1),
+                item := factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_value=(value := "file_1.MD")
                 ),
             ),
             (create_file,),
             (
                 factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title, reference_value=value, rank=rank
+                    hierarchy=1,
+                    reference_title=item.reference_title,
+                    reference_value=value,
+                    rank=item.rank,
                 ),
             ),
             id="single file upper case extension",
         ),
         pytest.param(
             (
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=0,
-                    reference_title=(title := "title 1"),
-                    reference_value=(value := "dir_1"),
-                    rank=(rank := 1),
+                item := factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_value=(value := "dir_1")
                 ),
             ),
             (create_dir,),
             (
                 factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title, reference_value=value, rank=rank
+                    hierarchy=1,
+                    reference_title=item.reference_title,
+                    reference_value=value,
+                    rank=item.rank,
                 ),
             ),
             id="single directory",
         ),
         pytest.param(
             (
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=0,
-                    reference_title=(title_1 := "title 1"),
-                    reference_value=(value_1 := "file_1.md"),
-                    rank=(rank_1 := 1),
+                item_1 := factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_value=(value_1 := "file_1.md")
                 ),
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=0,
-                    reference_title=(title_2 := "title 2"),
-                    reference_value=(value_2 := "file_2.md"),
-                    rank=(rank_2 := 2),
+                item_2 := factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_value=(value_2 := "file_2.md")
                 ),
             ),
             (create_file, create_file),
             (
                 factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_1, reference_value=value_1, rank=rank_1
+                    hierarchy=1,
+                    reference_title=item_1.reference_title,
+                    reference_value=value_1,
+                    rank=item_1.rank,
                 ),
                 factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_2, reference_value=value_2, rank=rank_2
+                    hierarchy=1,
+                    reference_title=item_2.reference_title,
+                    reference_value=value_2,
+                    rank=item_2.rank,
                 ),
             ),
             id="multiple files",
         ),
         pytest.param(
             (
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=0,
-                    reference_title=(title_1 := "title 1"),
-                    reference_value=(value_1 := "dir_1"),
-                    rank=(rank_1 := 1),
+                item_1 := factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_value=(value_1 := "dir_1")
                 ),
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=0,
-                    reference_title=(title_2 := "title 2"),
-                    reference_value=(value_2 := "dir_2"),
-                    rank=(rank_2 := 2),
+                item_2 := factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_value=(value_2 := "dir_2")
                 ),
             ),
             (create_dir, create_dir),
             (
                 factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_1, reference_value=value_1, rank=rank_1
+                    hierarchy=1,
+                    reference_title=item_1.reference_title,
+                    reference_value=value_1,
+                    rank=item_1.rank,
                 ),
                 factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_2, reference_value=value_2, rank=rank_2
+                    hierarchy=1,
+                    reference_title=item_2.reference_title,
+                    reference_value=value_2,
+                    rank=item_2.rank,
                 ),
             ),
             id="multiple directories",
         ),
         pytest.param(
             (
-                factories.IndexParsedListItemFactory(
+                item_1 := factories.IndexParsedListItemFactory(
                     whitespace_count=0,
-                    reference_title=(title_1 := "title 1"),
                     reference_value=(value_1 := "file_1.md"),
-                    rank=(rank_1 := 1),
                 ),
-                factories.IndexParsedListItemFactory(
+                item_2 := factories.IndexParsedListItemFactory(
                     whitespace_count=0,
-                    reference_title=(title_2 := "title 2"),
                     reference_value=(value_2 := "dir_2"),
-                    rank=(rank_2 := 2),
                 ),
             ),
             (create_file, create_dir),
             (
                 factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_1, reference_value=value_1, rank=rank_1
+                    hierarchy=1,
+                    reference_title=item_1.reference_title,
+                    reference_value=value_1,
+                    rank=item_1.rank,
                 ),
                 factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_2, reference_value=value_2, rank=rank_2
+                    hierarchy=1,
+                    reference_title=item_2.reference_title,
+                    reference_value=value_2,
+                    rank=item_2.rank,
                 ),
             ),
             id="single file single directory",
         ),
         pytest.param(
             (
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=0,
-                    reference_title=(title_1 := "title 1"),
-                    reference_value=(value_1 := "dir_1"),
-                    rank=(rank_1 := 1),
+                item_1 := factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_value=(value_1 := "dir_1")
                 ),
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=0,
-                    reference_title=(title_2 := "title 2"),
-                    reference_value=(value_2 := "file_2.md"),
-                    rank=(rank_2 := 2),
+                item_2 := factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_value=(value_2 := "file_2.md")
                 ),
             ),
             (create_dir, create_file),
             (
                 factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_1, reference_value=value_1, rank=rank_1
+                    hierarchy=1,
+                    reference_title=item_1.reference_title,
+                    reference_value=value_1,
+                    rank=item_1.rank,
                 ),
                 factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_2, reference_value=value_2, rank=rank_2
+                    hierarchy=1,
+                    reference_title=item_2.reference_title,
+                    reference_value=value_2,
+                    rank=item_2.rank,
                 ),
             ),
             id="single directory single file",
         ),
         pytest.param(
             (
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=0,
-                    reference_title=(title_1 := "title 1"),
-                    reference_value=(value_1 := "dir_1"),
-                    rank=(rank_1 := 1),
+                item_1 := factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_value=(value_1 := "dir_1")
                 ),
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=1,
-                    reference_title=(title_2 := "title 2"),
-                    reference_value=(value_2 := f"{value_1}/file_2.md"),
-                    rank=(rank_2 := 2),
+                item_2 := factories.IndexParsedListItemFactory(
+                    whitespace_count=1, reference_value=(value_2 := f"{value_1}/file_2.md")
                 ),
             ),
             (create_dir, create_file),
             (
                 factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_1, reference_value=value_1, rank=rank_1
+                    hierarchy=1,
+                    reference_title=item_1.reference_title,
+                    reference_value=value_1,
+                    rank=item_1.rank,
                 ),
                 factories.IndexContentsListItemFactory(
-                    hierarchy=2, reference_title=title_2, reference_value=value_2, rank=rank_2
+                    hierarchy=2,
+                    reference_title=item_2.reference_title,
+                    reference_value=value_2,
+                    rank=item_2.rank,
                 ),
             ),
             id="single directory single file in directory",
         ),
         pytest.param(
             (
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=0,
-                    reference_title=(title_1 := "title 1"),
-                    reference_value=(value_1 := "dir_1"),
-                    rank=(rank_1 := 1),
+                item_1 := factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_value=(value_1 := "dir_1")
                 ),
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=2,
-                    reference_title=(title_2 := "title 2"),
-                    reference_value=(value_2 := f"{value_1}/file_2.md"),
-                    rank=(rank_2 := 2),
+                item_2 := factories.IndexParsedListItemFactory(
+                    whitespace_count=2, reference_value=(value_2 := f"{value_1}/file_2.md")
                 ),
             ),
             (create_dir, create_file),
             (
                 factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_1, reference_value=value_1, rank=rank_1
+                    hierarchy=1,
+                    reference_title=item_1.reference_title,
+                    reference_value=value_1,
+                    rank=item_1.rank,
                 ),
                 factories.IndexContentsListItemFactory(
-                    hierarchy=2, reference_title=title_2, reference_value=value_2, rank=rank_2
+                    hierarchy=2,
+                    reference_title=item_2.reference_title,
+                    reference_value=value_2,
+                    rank=item_2.rank,
                 ),
             ),
             id="single directory single file in directory larger whitespace",
         ),
         pytest.param(
             (
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=0,
-                    reference_title=(title_1 := "title 1"),
-                    reference_value=(value_1 := "dir_1"),
-                    rank=(rank_1 := 1),
+                item_1 := factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_value=(value_1 := "dir_1")
                 ),
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=1,
-                    reference_title=(title_2 := "title 2"),
-                    reference_value=(value_2 := f"{value_1}/dir_2"),
-                    rank=(rank_2 := 2),
+                item_2 := factories.IndexParsedListItemFactory(
+                    whitespace_count=1, reference_value=(value_2 := f"{value_1}/dir_2")
                 ),
             ),
             (create_dir, create_dir),
             (
                 factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_1, reference_value=value_1, rank=rank_1
+                    hierarchy=1,
+                    reference_title=item_1.reference_title,
+                    reference_value=value_1,
+                    rank=item_1.rank,
                 ),
                 factories.IndexContentsListItemFactory(
-                    hierarchy=2, reference_title=title_2, reference_value=value_2, rank=rank_2
+                    hierarchy=2,
+                    reference_title=item_2.reference_title,
+                    reference_value=value_2,
+                    rank=item_2.rank,
                 ),
             ),
             id="single directory single directory in directory",
         ),
         pytest.param(
             (
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=0,
-                    reference_title=(title_1 := "title 1"),
-                    reference_value=(value_1 := "file_1.md"),
-                    rank=(rank_1 := 1),
+                item_1 := factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_value=(value_1 := "file_1.md")
                 ),
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=0,
-                    reference_title=(title_2 := "title 2"),
-                    reference_value=(value_2 := "file_2.md"),
-                    rank=(rank_2 := 2),
+                item_2 := factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_value=(value_2 := "file_2.md")
                 ),
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=0,
-                    reference_title=(title_3 := "title 3"),
-                    reference_value=(value_3 := "file_3.md"),
-                    rank=(rank_3 := 3),
+                item_3 := factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_value=(value_3 := "file_3.md")
                 ),
             ),
             (create_file, create_file, create_file),
             (
                 factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_1, reference_value=value_1, rank=rank_1
+                    hierarchy=1,
+                    reference_title=item_1.reference_title,
+                    reference_value=value_1,
+                    rank=item_1.rank,
                 ),
                 factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_2, reference_value=value_2, rank=rank_2
+                    hierarchy=1,
+                    reference_title=item_2.reference_title,
+                    reference_value=value_2,
+                    rank=item_2.rank,
                 ),
                 factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_3, reference_value=value_3, rank=rank_3
+                    hierarchy=1,
+                    reference_title=item_3.reference_title,
+                    reference_value=value_3,
+                    rank=item_3.rank,
                 ),
             ),
             id="many files",
         ),
         pytest.param(
             (
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=0,
-                    reference_title=(title_1 := "title 1"),
-                    reference_value=(value_1 := "dir_1"),
-                    rank=(rank_1 := 1),
+                item_1 := factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_value=(value_1 := "dir_1")
                 ),
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=0,
-                    reference_title=(title_2 := "title 2"),
-                    reference_value=(value_2 := "dir_2"),
-                    rank=(rank_2 := 2),
+                item_2 := factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_value=(value_2 := "dir_2")
                 ),
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=0,
-                    reference_title=(title_3 := "title 3"),
-                    reference_value=(value_3 := "dir_3"),
-                    rank=(rank_3 := 3),
+                item_3 := factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_value=(value_3 := "dir_3")
                 ),
             ),
             (create_dir, create_dir, create_dir),
             (
                 factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_1, reference_value=value_1, rank=rank_1
+                    hierarchy=1,
+                    reference_title=item_1.reference_title,
+                    reference_value=value_1,
+                    rank=item_1.rank,
                 ),
                 factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_2, reference_value=value_2, rank=rank_2
+                    hierarchy=1,
+                    reference_title=item_2.reference_title,
+                    reference_value=value_2,
+                    rank=item_2.rank,
                 ),
                 factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_3, reference_value=value_3, rank=rank_3
+                    hierarchy=1,
+                    reference_title=item_3.reference_title,
+                    reference_value=value_3,
+                    rank=item_3.rank,
                 ),
             ),
             id="many directories",
         ),
         pytest.param(
             (
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=0,
-                    reference_title=(title_1 := "title 1"),
-                    reference_value=(value_1 := "dir_1"),
-                    rank=(rank_1 := 1),
+                item_1 := factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_value=(value_1 := "dir_1")
                 ),
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=1,
-                    reference_title=(title_2 := "title 2"),
-                    reference_value=(value_2 := f"{value_1}/file_2.md"),
-                    rank=(rank_2 := 2),
+                item_2 := factories.IndexParsedListItemFactory(
+                    whitespace_count=1, reference_value=(value_2 := f"{value_1}/file_2.md")
                 ),
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=0,
-                    reference_title=(title_3 := "title 3"),
-                    reference_value=(value_3 := "file_3.md"),
-                    rank=(rank_3 := 3),
+                item_3 := factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_value=(value_3 := "file_3.md")
                 ),
             ),
             (create_dir, create_file, create_file),
             (
                 factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_1, reference_value=value_1, rank=rank_1
+                    hierarchy=1,
+                    reference_title=item_1.reference_title,
+                    reference_value=value_1,
+                    rank=item_1.rank,
                 ),
                 factories.IndexContentsListItemFactory(
-                    hierarchy=2, reference_title=title_2, reference_value=value_2, rank=rank_2
+                    hierarchy=2,
+                    reference_title=item_2.reference_title,
+                    reference_value=value_2,
+                    rank=item_2.rank,
                 ),
                 factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_3, reference_value=value_3, rank=rank_3
+                    hierarchy=1,
+                    reference_title=item_3.reference_title,
+                    reference_value=value_3,
+                    rank=item_3.rank,
                 ),
             ),
             id="single file in directory",
         ),
         pytest.param(
             (
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=0,
-                    reference_title=(title_1 := "title 1"),
-                    reference_value=(value_1 := "dir_1"),
-                    rank=(rank_1 := 1),
+                item_1 := factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_value=(value_1 := "dir_1")
                 ),
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=1,
-                    reference_title=(title_2 := "title 2"),
-                    reference_value=(value_2 := f"{value_1}/file_2.md"),
-                    rank=(rank_2 := 2),
+                item_2 := factories.IndexParsedListItemFactory(
+                    whitespace_count=1, reference_value=(value_2 := f"{value_1}/file_2.md")
                 ),
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=1,
-                    reference_title=(title_3 := "title 3"),
-                    reference_value=(value_3 := f"{value_1}/file_3.md"),
-                    rank=(rank_3 := 3),
+                item_3 := factories.IndexParsedListItemFactory(
+                    whitespace_count=1, reference_value=(value_3 := f"{value_1}/file_3.md")
                 ),
             ),
             (create_dir, create_file, create_file),
             (
                 factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_1, reference_value=value_1, rank=rank_1
+                    hierarchy=1,
+                    reference_title=item_1.reference_title,
+                    reference_value=value_1,
+                    rank=item_1.rank,
                 ),
                 factories.IndexContentsListItemFactory(
-                    hierarchy=2, reference_title=title_2, reference_value=value_2, rank=rank_2
+                    hierarchy=2,
+                    reference_title=item_2.reference_title,
+                    reference_value=value_2,
+                    rank=item_2.rank,
                 ),
                 factories.IndexContentsListItemFactory(
-                    hierarchy=2, reference_title=title_3, reference_value=value_3, rank=rank_3
+                    hierarchy=2,
+                    reference_title=item_3.reference_title,
+                    reference_value=value_3,
+                    rank=item_3.rank,
                 ),
             ),
             id="multiple files in directory",
         ),
         pytest.param(
             (
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=0,
-                    reference_title=(title_1 := "title 1"),
-                    reference_value=(value_1 := "dir_1"),
-                    rank=(rank_1 := 1),
+                item_1 := factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_value=(value_1 := "dir_1")
                 ),
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=1,
-                    reference_title=(title_2 := "title 2"),
-                    reference_value=(value_2 := f"{value_1}/dir_2"),
-                    rank=(rank_2 := 2),
+                item_2 := factories.IndexParsedListItemFactory(
+                    whitespace_count=1, reference_value=(value_2 := f"{value_1}/dir_2")
                 ),
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=2,
-                    reference_title=(title_3 := "title 3"),
-                    reference_value=(value_3 := f"{value_2}/file_3.md"),
-                    rank=(rank_3 := 3),
+                item_3 := factories.IndexParsedListItemFactory(
+                    whitespace_count=2, reference_value=(value_3 := f"{value_2}/file_3.md")
                 ),
             ),
             (create_dir, create_dir, create_file),
             (
                 factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_1, reference_value=value_1, rank=rank_1
+                    hierarchy=1,
+                    reference_title=item_1.reference_title,
+                    reference_value=value_1,
+                    rank=item_1.rank,
                 ),
                 factories.IndexContentsListItemFactory(
-                    hierarchy=2, reference_title=title_2, reference_value=value_2, rank=rank_2
+                    hierarchy=2,
+                    reference_title=item_2.reference_title,
+                    reference_value=value_2,
+                    rank=item_2.rank,
                 ),
                 factories.IndexContentsListItemFactory(
-                    hierarchy=3, reference_title=title_3, reference_value=value_3, rank=rank_3
+                    hierarchy=3,
+                    reference_title=item_3.reference_title,
+                    reference_value=value_3,
+                    rank=item_3.rank,
                 ),
             ),
             id="single directory single nested directory single file in nested directory",
         ),
         pytest.param(
             (
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=0,
-                    reference_title=(title_1 := "title 1"),
-                    reference_value=(value_1 := "dir_1"),
-                    rank=(rank_1 := 1),
+                item_1 := factories.IndexParsedListItemFactory(
+                    whitespace_count=0, reference_value=(value_1 := "dir_1")
                 ),
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=1,
-                    reference_title=(title_2 := "title 2"),
-                    reference_value=(value_2 := f"{value_1}/dir_2"),
-                    rank=(rank_2 := 2),
+                item_2 := factories.IndexParsedListItemFactory(
+                    whitespace_count=1, reference_value=(value_2 := f"{value_1}/dir_2")
                 ),
-                factories.IndexParsedListItemFactory(
-                    whitespace_count=2,
-                    reference_title=(title_3 := "title 3"),
-                    reference_value=(value_3 := f"{value_2}/dir_3"),
-                    rank=(rank_3 := 3),
+                item_3 := factories.IndexParsedListItemFactory(
+                    whitespace_count=2, reference_value=(value_3 := f"{value_2}/dir_3")
                 ),
             ),
             (create_dir, create_dir, create_dir),
             (
                 factories.IndexContentsListItemFactory(
-                    hierarchy=1, reference_title=title_1, reference_value=value_1, rank=rank_1
+                    hierarchy=1,
+                    reference_title=item_1.reference_title,
+                    reference_value=value_1,
+                    rank=item_1.rank,
                 ),
                 factories.IndexContentsListItemFactory(
-                    hierarchy=2, reference_title=title_2, reference_value=value_2, rank=rank_2
+                    hierarchy=2,
+                    reference_title=item_2.reference_title,
+                    reference_value=value_2,
+                    rank=item_2.rank,
                 ),
                 factories.IndexContentsListItemFactory(
-                    hierarchy=3, reference_title=title_3, reference_value=value_3, rank=rank_3
+                    hierarchy=3,
+                    reference_title=item_3.reference_title,
+                    reference_value=value_3,
+                    rank=item_3.rank,
                 ),
             ),
             id="single directory single nested directory single directory in nested directory",
