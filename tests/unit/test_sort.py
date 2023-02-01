@@ -66,6 +66,40 @@ def _test_using_contents_index_parameters():
             (change_path_info_attrs(path_info=path_info, navlink_title=item.reference_title),),
             id="single path info directory matching contents index",
         ),
+        pytest.param(
+            (
+                path_info_1 := factories.PathInfoFactory(
+                    local_path="file_1.md", alphabetical_rank=1
+                ),
+                path_info_2 := factories.PathInfoFactory(
+                    local_path="file_2.md", alphabetical_rank=0
+                ),
+            ),
+            (),
+            (create_file, create_file),
+            (path_info_2, path_info_1),
+            id="multiple path info wrong order no contents index",
+        ),
+        pytest.param(
+            (
+                path_info_1 := factories.PathInfoFactory(local_path=(path_1 := "file_1.md")),
+                path_info_2 := factories.PathInfoFactory(local_path=(path_2 := "file_2.md")),
+            ),
+            (
+                item_1 := factories.IndexContentsListItemFactory(reference_value=path_1, rank=1),
+                item_2 := factories.IndexContentsListItemFactory(reference_value=path_2, rank=0),
+            ),
+            (create_file, create_file),
+            (
+                change_path_info_attrs(
+                    path_info=path_info_2, navlink_title=item_2.reference_title
+                ),
+                change_path_info_attrs(
+                    path_info=path_info_1, navlink_title=item_1.reference_title
+                ),
+            ),
+            id="multiple path info contents index wrong order",
+        ),
     ]
 
 
