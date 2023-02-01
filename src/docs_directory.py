@@ -1,7 +1,7 @@
 # Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Class for reading the docs directory."""
+"""Module for reading the docs directory."""
 
 import typing
 from functools import partial
