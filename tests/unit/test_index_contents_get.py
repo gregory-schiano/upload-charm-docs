@@ -1,7 +1,7 @@
 # Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Unit tests for run module."""
+"""Unit tests for index module get_contents function."""
 
 import typing
 from pathlib import Path

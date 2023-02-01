@@ -1,7 +1,7 @@
 # Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Unit tests for run module."""
+"""Unit tests for index module _calculate_contents_hierarchy function."""
 
 # Need access to protected functions for testing
 # pylint: disable=protected-access

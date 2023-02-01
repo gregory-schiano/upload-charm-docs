@@ -48,6 +48,7 @@ def using_contents_index(
         for idx, path_info in enumerate(alphabetically_sorted_path_infos)
         if path_info.local_path.is_dir()
     }
+    directories_index[base_dir] = 0
     items = peekable(rank_sorted_index_contents)
 
     # Need this function to be defined here to retain access to data structures
@@ -68,11 +69,13 @@ def using_contents_index(
             next_item = items.peek(None)
 
             # Get the path info
-            item_path_info = local_path_path_info[base_dir / item.reference_value]
+            item_local_path = base_dir / item.reference_value
+            item_path_info = local_path_path_info[item_local_path]
             # Update the navlink title based on the contents index
             item_path_info_dict = item_path_info._asdict()
             item_path_info_dict["navlink_title"] = item.reference_title
             yield types_.PathInfo(**item_path_info_dict)
+            local_path_yielded[item_local_path] = True
 
             # Check for directory
             if item_path_info.local_path.is_dir():
@@ -100,6 +103,6 @@ def using_contents_index(
     yield from _contents_index_iter()
     # Yield all items not yet yielded
     yield from filter(
-        lambda path_info: not not local_path_yielded[path_info.local_path],
+        lambda path_info: not local_path_yielded[path_info.local_path],
         alphabetically_sorted_path_infos,
     )

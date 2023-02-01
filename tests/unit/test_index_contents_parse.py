@@ -1,7 +1,7 @@
 # Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Unit tests for run module."""
+"""Unit tests for index module _get_contents_parsed_items function."""
 
 # Need access to protected functions for testing
 # pylint: disable=protected-access
