@@ -54,14 +54,14 @@ def _test_using_contents_index_parameters():
         ),
         pytest.param(
             (path_info := factories.PathInfoFactory(local_path=(path_1 := "file_1.md")),),
-            (item := factories.IndexContentsListItemFactory(reference_value=path_1),),
+            (item := factories.IndexContentsListItemFactory(reference_value=path_1, hierarchy=1),),
             (create_file,),
             (change_path_info_attrs(path_info=path_info, navlink_title=item.reference_title),),
             id="single path info file matching contents index",
         ),
         pytest.param(
             (path_info := factories.PathInfoFactory(local_path=(path_1 := "dir_1")),),
-            (item := factories.IndexContentsListItemFactory(reference_value=path_1),),
+            (item := factories.IndexContentsListItemFactory(reference_value=path_1, hierarchy=1),),
             (create_dir,),
             (change_path_info_attrs(path_info=path_info, navlink_title=item.reference_title),),
             id="single path info directory matching contents index",
@@ -86,8 +86,12 @@ def _test_using_contents_index_parameters():
                 path_info_2 := factories.PathInfoFactory(local_path=(path_2 := "file_2.md")),
             ),
             (
-                item_1 := factories.IndexContentsListItemFactory(reference_value=path_1, rank=1),
-                item_2 := factories.IndexContentsListItemFactory(reference_value=path_2, rank=0),
+                item_1 := factories.IndexContentsListItemFactory(
+                    reference_value=path_1, hierarchy=1, rank=1
+                ),
+                item_2 := factories.IndexContentsListItemFactory(
+                    reference_value=path_2, hierarchy=1, rank=0
+                ),
             ),
             (create_file, create_file),
             (
@@ -99,6 +103,166 @@ def _test_using_contents_index_parameters():
                 ),
             ),
             id="multiple path info contents index wrong order",
+        ),
+        pytest.param(
+            (
+                path_info_1 := factories.PathInfoFactory(local_path=(path_1 := "file_1.md")),
+                path_info_2 := factories.PathInfoFactory(local_path=(path_2 := "file_2.md")),
+            ),
+            (
+                item_1 := factories.IndexContentsListItemFactory(
+                    reference_value=path_1, hierarchy=1
+                ),
+            ),
+            (create_file, create_file),
+            (
+                change_path_info_attrs(
+                    path_info=path_info_1, navlink_title=item_1.reference_title
+                ),
+                path_info_2,
+            ),
+            id="multiple path info contents index first",
+        ),
+        pytest.param(
+            (
+                path_info_1 := factories.PathInfoFactory(local_path=(path_1 := "file_1.md")),
+                path_info_2 := factories.PathInfoFactory(local_path=(path_2 := "file_2.md")),
+            ),
+            (
+                item_2 := factories.IndexContentsListItemFactory(
+                    reference_value=path_2, hierarchy=1
+                ),
+            ),
+            (create_file, create_file),
+            (
+                change_path_info_attrs(
+                    path_info=path_info_2, navlink_title=item_2.reference_title
+                ),
+                path_info_1,
+            ),
+            id="multiple path info contents index second",
+        ),
+        pytest.param(
+            (
+                path_info_1 := factories.PathInfoFactory(local_path=(path_1 := "file_1.md")),
+                path_info_2 := factories.PathInfoFactory(local_path=(path_2 := "file_2.md")),
+            ),
+            (
+                item_1 := factories.IndexContentsListItemFactory(
+                    reference_value=path_1, hierarchy=1
+                ),
+                item_2 := factories.IndexContentsListItemFactory(
+                    reference_value=path_2, hierarchy=1
+                ),
+            ),
+            (create_file, create_file),
+            (
+                change_path_info_attrs(
+                    path_info=path_info_1, navlink_title=item_1.reference_title
+                ),
+                change_path_info_attrs(
+                    path_info=path_info_2, navlink_title=item_2.reference_title
+                ),
+            ),
+            id="multiple path info file contents index",
+        ),
+        pytest.param(
+            (
+                path_info_1 := factories.PathInfoFactory(local_path=(path_1 := "dir_1")),
+                path_info_2 := factories.PathInfoFactory(local_path=(path_2 := "dir_2")),
+            ),
+            (
+                item_1 := factories.IndexContentsListItemFactory(
+                    reference_value=path_1, hierarchy=1
+                ),
+                item_2 := factories.IndexContentsListItemFactory(
+                    reference_value=path_2, hierarchy=1
+                ),
+            ),
+            (create_dir, create_dir),
+            (
+                change_path_info_attrs(
+                    path_info=path_info_1, navlink_title=item_1.reference_title
+                ),
+                change_path_info_attrs(
+                    path_info=path_info_2, navlink_title=item_2.reference_title
+                ),
+            ),
+            id="multiple path info directory contents index",
+        ),
+        pytest.param(
+            (
+                path_info_1 := factories.PathInfoFactory(local_path=(path_1 := "file_1.md")),
+                path_info_2 := factories.PathInfoFactory(local_path=(path_2 := "dir_2")),
+            ),
+            (
+                item_1 := factories.IndexContentsListItemFactory(
+                    reference_value=path_1, hierarchy=1
+                ),
+                item_2 := factories.IndexContentsListItemFactory(
+                    reference_value=path_2, hierarchy=1
+                ),
+            ),
+            (create_file, create_dir),
+            (
+                change_path_info_attrs(
+                    path_info=path_info_1, navlink_title=item_1.reference_title
+                ),
+                change_path_info_attrs(
+                    path_info=path_info_2, navlink_title=item_2.reference_title
+                ),
+            ),
+            id="multiple path info file and directory contents index",
+        ),
+        pytest.param(
+            (
+                path_info_2 := factories.PathInfoFactory(local_path=(path_2 := "dir_1")),
+                path_info_1 := factories.PathInfoFactory(
+                    local_path=(path_1 := f"{path_2}/file_2.md")
+                ),
+            ),
+            (
+                item_1 := factories.IndexContentsListItemFactory(
+                    reference_value=path_1, hierarchy=1
+                ),
+                item_2 := factories.IndexContentsListItemFactory(
+                    reference_value=path_2, hierarchy=2
+                ),
+            ),
+            (create_dir, create_file),
+            (
+                change_path_info_attrs(
+                    path_info=path_info_1, navlink_title=item_1.reference_title
+                ),
+                change_path_info_attrs(
+                    path_info=path_info_2, navlink_title=item_2.reference_title
+                ),
+            ),
+            id="multiple path info file in directory contents index",
+        ),
+        pytest.param(
+            (
+                path_info_2 := factories.PathInfoFactory(local_path=(path_2 := "dir_1")),
+                path_info_1 := factories.PathInfoFactory(local_path=(path_1 := f"{path_2}/dir_2")),
+            ),
+            (
+                item_1 := factories.IndexContentsListItemFactory(
+                    reference_value=path_1, hierarchy=1
+                ),
+                item_2 := factories.IndexContentsListItemFactory(
+                    reference_value=path_2, hierarchy=2
+                ),
+            ),
+            (create_dir, create_dir),
+            (
+                change_path_info_attrs(
+                    path_info=path_info_1, navlink_title=item_1.reference_title
+                ),
+                change_path_info_attrs(
+                    path_info=path_info_2, navlink_title=item_2.reference_title
+                ),
+            ),
+            id="multiple path info directory in directory contents index",
         ),
     ]
 
