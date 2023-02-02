@@ -36,6 +36,8 @@ def _test_using_contents_index_parameters():
     Returns:
         The tests.
     """
+    # Disabled because the number of tests requires the local variables
+    # pylint: disable=too-many-locals
     return [
         pytest.param((), (), (), (), id="empty"),
         pytest.param(

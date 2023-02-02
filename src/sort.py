@@ -74,19 +74,23 @@ def _create_sort_data(
 def _contents_index_iter(
     sort_data: _SortData,
     current_dir: Path,
-    current_hierarchy=0,
+    current_hierarchy: int = 0,
 ) -> typing.Iterator[types_.PathInfo]:
     """Recursively iterates through items by their hierarchy.
 
     Args:
+        sort_data: The input data required for the sorting.
         current_dir: The directory being processed.
-        base_dir: The directory the documentation files are contained within.
         current_hierarchy: The hierarchy of the directory being processed.
+
+    Yields:
+        PathInfo in sorted order first by the contents index items and then by alphabetical rank.
     """
     while (next_item := sort_data.items.peek(None)) is not None:
         # Advance iterator
         item = next_item
-        next(sort_data.items)
+        # Pass default of None to guarantee StopIteration is not raised
+        next(sort_data.items, None)
         next_item = sort_data.items.peek(None)
 
         # Get the path info
