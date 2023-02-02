@@ -264,6 +264,260 @@ def _test_using_contents_index_parameters():
             ),
             id="multiple path info directory in directory contents index",
         ),
+        pytest.param(
+            (
+                path_info_1 := factories.PathInfoFactory(local_path=(path_1 := "dir_1")),
+                path_info_2 := factories.PathInfoFactory(
+                    local_path=(path_2 := f"{path_1}/file_2.md")
+                ),
+                path_info_3 := factories.PathInfoFactory(local_path=f"{path_1}/file_3.md"),
+            ),
+            (
+                item_1 := factories.IndexContentsListItemFactory(
+                    reference_value=path_1, hierarchy=1
+                ),
+                item_2 := factories.IndexContentsListItemFactory(
+                    reference_value=path_2, hierarchy=2
+                ),
+            ),
+            (create_dir, create_file, create_file),
+            (
+                change_path_info_attrs(
+                    path_info=path_info_1, navlink_title=item_1.reference_title
+                ),
+                change_path_info_attrs(
+                    path_info=path_info_2, navlink_title=item_2.reference_title
+                ),
+                path_info_3,
+            ),
+            id="many path info in directory contents index first",
+        ),
+        pytest.param(
+            (
+                path_info_1 := factories.PathInfoFactory(local_path=(path_1 := "dir_1")),
+                path_info_2 := factories.PathInfoFactory(local_path=f"{path_1}/file_2.md"),
+                path_info_3 := factories.PathInfoFactory(
+                    local_path=(path_3 := f"{path_1}/file_3.md")
+                ),
+            ),
+            (
+                item_1 := factories.IndexContentsListItemFactory(
+                    reference_value=path_1, hierarchy=1
+                ),
+                item_3 := factories.IndexContentsListItemFactory(
+                    reference_value=path_3, hierarchy=2
+                ),
+            ),
+            (create_dir, create_file, create_file),
+            (
+                change_path_info_attrs(
+                    path_info=path_info_1, navlink_title=item_1.reference_title
+                ),
+                change_path_info_attrs(
+                    path_info=path_info_3, navlink_title=item_3.reference_title
+                ),
+                path_info_2,
+            ),
+            id="many path info in directory contents index second",
+        ),
+        pytest.param(
+            (
+                path_info_1 := factories.PathInfoFactory(local_path=(path_1 := "dir_1")),
+                path_info_2 := factories.PathInfoFactory(local_path=(path_2 := f"{path_1}/dir_2")),
+                path_info_3 := factories.PathInfoFactory(local_path=f"{path_2}/file_3.md"),
+            ),
+            (
+                item_1 := factories.IndexContentsListItemFactory(
+                    reference_value=path_1, hierarchy=1
+                ),
+                item_2 := factories.IndexContentsListItemFactory(
+                    reference_value=path_2, hierarchy=2
+                ),
+            ),
+            (create_dir, create_dir, create_file),
+            (
+                change_path_info_attrs(
+                    path_info=path_info_1, navlink_title=item_1.reference_title
+                ),
+                change_path_info_attrs(
+                    path_info=path_info_2, navlink_title=item_2.reference_title
+                ),
+                path_info_3,
+            ),
+            id="many path info in nested directory contents index directories only",
+        ),
+        pytest.param(
+            (
+                path_info_1 := factories.PathInfoFactory(local_path=(path_1 := "dir_1")),
+                path_info_2 := factories.PathInfoFactory(local_path=(path_2 := f"{path_1}/dir_2")),
+                path_info_3 := factories.PathInfoFactory(
+                    local_path=(path_3 := f"{path_2}/file_3.md")
+                ),
+            ),
+            (
+                item_1 := factories.IndexContentsListItemFactory(
+                    reference_value=path_1, hierarchy=1
+                ),
+                item_2 := factories.IndexContentsListItemFactory(
+                    reference_value=path_2, hierarchy=2
+                ),
+                item_3 := factories.IndexContentsListItemFactory(
+                    reference_value=path_3, hierarchy=3
+                ),
+            ),
+            (create_dir, create_dir, create_file),
+            (
+                change_path_info_attrs(
+                    path_info=path_info_1, navlink_title=item_1.reference_title
+                ),
+                change_path_info_attrs(
+                    path_info=path_info_2, navlink_title=item_2.reference_title
+                ),
+                change_path_info_attrs(
+                    path_info=path_info_3, navlink_title=item_3.reference_title
+                ),
+            ),
+            id="many path info in nested directory contents index directories all",
+        ),
+        pytest.param(
+            (
+                path_info_1 := factories.PathInfoFactory(local_path=(path_1 := "dir_1")),
+                path_info_2 := factories.PathInfoFactory(local_path=(path_2 := f"{path_1}/dir_2")),
+                path_info_3 := factories.PathInfoFactory(
+                    local_path=(path_3 := f"{path_2}/file_3.md")
+                ),
+                path_info_4 := factories.PathInfoFactory(local_path=f"{path_2}/file_4.md"),
+                path_info_5 := factories.PathInfoFactory(
+                    local_path=(path_5 := f"{path_1}/file_5.md")
+                ),
+            ),
+            (
+                item_1 := factories.IndexContentsListItemFactory(
+                    reference_value=path_1, hierarchy=1
+                ),
+                item_2 := factories.IndexContentsListItemFactory(
+                    reference_value=path_2, hierarchy=2
+                ),
+                item_3 := factories.IndexContentsListItemFactory(
+                    reference_value=path_3, hierarchy=3
+                ),
+                item_5 := factories.IndexContentsListItemFactory(
+                    reference_value=path_5, hierarchy=2
+                ),
+            ),
+            (create_dir, create_dir, create_file, create_file, create_file),
+            (
+                change_path_info_attrs(
+                    path_info=path_info_1, navlink_title=item_1.reference_title
+                ),
+                change_path_info_attrs(
+                    path_info=path_info_2, navlink_title=item_2.reference_title
+                ),
+                change_path_info_attrs(
+                    path_info=path_info_3, navlink_title=item_3.reference_title
+                ),
+                path_info_4,
+                change_path_info_attrs(
+                    path_info=path_info_5, navlink_title=item_5.reference_title
+                ),
+            ),
+            id="many path info in nested directory contents index directories included item "
+            "follows not included",
+        ),
+        pytest.param(
+            (
+                path_info_1 := factories.PathInfoFactory(local_path=(path_1 := "dir_1")),
+                path_info_2 := factories.PathInfoFactory(local_path=(path_2 := f"{path_1}/dir_2")),
+                path_info_3 := factories.PathInfoFactory(
+                    local_path=(path_3 := f"{path_2}/file_3.md")
+                ),
+                path_info_4 := factories.PathInfoFactory(local_path=f"{path_2}/file_4.md"),
+                path_info_5 := factories.PathInfoFactory(local_path=f"{path_2}/file_5.md"),
+                path_info_6 := factories.PathInfoFactory(
+                    local_path=(path_6 := f"{path_1}/file_6.md")
+                ),
+            ),
+            (
+                item_1 := factories.IndexContentsListItemFactory(
+                    reference_value=path_1, hierarchy=1
+                ),
+                item_2 := factories.IndexContentsListItemFactory(
+                    reference_value=path_2, hierarchy=2
+                ),
+                item_3 := factories.IndexContentsListItemFactory(
+                    reference_value=path_3, hierarchy=3
+                ),
+                item_6 := factories.IndexContentsListItemFactory(
+                    reference_value=path_6, hierarchy=2
+                ),
+            ),
+            (create_dir, create_dir, create_file, create_file, create_file),
+            (
+                change_path_info_attrs(
+                    path_info=path_info_1, navlink_title=item_1.reference_title
+                ),
+                change_path_info_attrs(
+                    path_info=path_info_2, navlink_title=item_2.reference_title
+                ),
+                change_path_info_attrs(
+                    path_info=path_info_3, navlink_title=item_3.reference_title
+                ),
+                path_info_4,
+                path_info_5,
+                change_path_info_attrs(
+                    path_info=path_info_6, navlink_title=item_6.reference_title
+                ),
+            ),
+            id="many path info in nested directory contents index directories included item "
+            "follows multiple not included",
+        ),
+        pytest.param(
+            (
+                path_info_1 := factories.PathInfoFactory(local_path=(path_1 := "dir_1")),
+                path_info_2 := factories.PathInfoFactory(local_path=(path_2 := f"{path_1}/dir_2")),
+                path_info_3 := factories.PathInfoFactory(
+                    local_path=(path_3 := f"{path_2}/file_3.md")
+                ),
+                path_info_4 := factories.PathInfoFactory(local_path=f"{path_2}/file_4.md"),
+                path_info_5 := factories.PathInfoFactory(
+                    local_path=(path_5 := f"{path_1}/file_5.md")
+                ),
+                path_info_6 := factories.PathInfoFactory(local_path=f"{path_1}/file_6.md"),
+            ),
+            (
+                item_1 := factories.IndexContentsListItemFactory(
+                    reference_value=path_1, hierarchy=1
+                ),
+                item_2 := factories.IndexContentsListItemFactory(
+                    reference_value=path_2, hierarchy=2
+                ),
+                item_3 := factories.IndexContentsListItemFactory(
+                    reference_value=path_3, hierarchy=3
+                ),
+                item_5 := factories.IndexContentsListItemFactory(
+                    reference_value=path_5, hierarchy=2
+                ),
+            ),
+            (create_dir, create_dir, create_file, create_file, create_file),
+            (
+                change_path_info_attrs(
+                    path_info=path_info_1, navlink_title=item_1.reference_title
+                ),
+                change_path_info_attrs(
+                    path_info=path_info_2, navlink_title=item_2.reference_title
+                ),
+                change_path_info_attrs(
+                    path_info=path_info_3, navlink_title=item_3.reference_title
+                ),
+                path_info_4,
+                change_path_info_attrs(
+                    path_info=path_info_5, navlink_title=item_5.reference_title
+                ),
+                path_info_6,
+            ),
+            id="many path info in nested directory contents index directories included item "
+            "multiple follows not included",
+        ),
     ]
 
 

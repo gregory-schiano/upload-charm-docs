@@ -60,7 +60,7 @@ def using_contents_index(
 
         Args:
             current_dir: The directory being processed.
-            current_hierarchy: The hierarchy being processed.
+            current_hierarchy: The hierarchy of the directory being processed.
         """
         while (next_item := items.peek(None)) is not None:
             # Advance iterator
@@ -85,15 +85,16 @@ def using_contents_index(
                 )
 
             # Check for last item in the directory
-            if next_item is None or next_item.hierarchy < current_hierarchy:
+            if next_item is None or next_item.hierarchy <= current_hierarchy:
                 # Yield all remaining items for the current directory
                 path_infos_for_dir = itertools.takewhile(
                     lambda path_info: current_dir in path_info.local_path.parents,
-                    alphabetically_sorted_path_infos[directories_index[current_dir] :],
+                    alphabetically_sorted_path_infos[directories_index[current_dir] + 1 :],
                 )
-                path_infos_for_dir_not_yielded = filter(
-                    lambda path_info: not local_path_yielded[path_info.local_path],
-                    path_infos_for_dir,
+                path_infos_for_dir_not_yielded = (
+                    path_info
+                    for path_info in path_infos_for_dir
+                    if not local_path_yielded[path_info.local_path]
                 )
                 yield from side_effect(
                     lambda path_info: local_path_yielded.update(((path_info.local_path, True),)),
