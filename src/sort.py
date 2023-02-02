@@ -51,6 +51,7 @@ def _create_sort_data(
     # Ensure initial sorting is correct
     alpha_sorted_path_infos = sorted(path_infos, key=lambda path_info: path_info.alphabetical_rank)
     rank_sorted_index_contents = sorted(index_contents, key=lambda item: item.rank)
+
     directories_index = {
         path_info.local_path: idx
         for idx, path_info in enumerate(alpha_sorted_path_infos)
