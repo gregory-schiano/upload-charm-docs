@@ -7,14 +7,9 @@ import itertools
 import typing
 
 from . import exceptions, types_
+from .constants import NAVIGATION_TABLE_START
 from .discourse import Discourse
-
-NAVIGATION_TABLE_START = """
-
-# Navigation
-
-| Level | Path | Navlink |
-| -- | -- | -- |"""
+from .index import get_content_for_server as get_index_content_for_server
 
 
 def _local_only(path_info: types_.PathInfo) -> types_.CreateAction:
@@ -321,7 +316,8 @@ def index_page(
     """
     table_contents = "\n".join(table_row.to_markdown() for table_row in table_rows)
     local_content = (
-        f"{index.local.content or ''}{NAVIGATION_TABLE_START}\n{table_contents}\n".strip()
+        f"{get_index_content_for_server(index.local)}{NAVIGATION_TABLE_START}\n"
+        f"{table_contents}\n".strip()
     )
 
     if index.server is None:

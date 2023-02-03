@@ -100,6 +100,56 @@ def test__run_reconcile_local_empty_server(tmp_path: Path):
     }
 
 
+def test__run_reconcile_local_contents_index(tmp_path: Path):
+    """
+    arrange: given metadata with name but not docs and docs folder with multiple files, contents
+        index with the files and mocked discourse
+    act: when _run_reconcile is called
+    assert: then a documentation page is created and an index page is created with a navigation
+        page with a reference to the documentation pages based on the order in the contents index.
+    """
+    name = "name 1"
+    meta = types_.Metadata(name=name, docs=None)
+    (docs_dir := tmp_path / "docs").mkdir()
+    (docs_dir / (page_1 := Path("page_1.md"))).write_text("page 1 content")
+    (docs_dir / (page_2 := Path("page_2.md"))).write_text("page 2 content")
+    (docs_dir / "index.md").write_text(
+        f"""{(index_content := 'index content')}
+# contents
+- [{(page_2_title := "Page 2")}]({page_2})
+- [{(page_1_title := "Page 2")}]({page_1})
+"""
+    )
+    mocked_discourse = mock.MagicMock(spec=discourse.Discourse)
+    mocked_discourse.create_topic.side_effect = [
+        (page_1_url := "url 1"),
+        (page_2_url := "url 1"),
+        (index_url := "url 2"),
+    ]
+
+    returned_page_interactions = _run_reconcile(
+        base_path=tmp_path,
+        metadata=meta,
+        discourse=mocked_discourse,
+        dry_run=False,
+        delete_pages=True,
+    )
+
+    mocked_discourse.create_topic.assert_any_call(
+        title="Name 1 Documentation Overview",
+        content=(
+            f"{index_content}{reconcile.NAVIGATION_TABLE_START}\n"
+            f"| 1 | page-2 | [{page_2_title}]({page_2_url}) |\n"
+            f"| 1 | page-1 | [{page_1_title}]({page_1_url}) |"
+        ),
+    )
+    assert returned_page_interactions == {
+        page_2_url: types_.ActionResult.SUCCESS,
+        page_1_url: types_.ActionResult.SUCCESS,
+        index_url: types_.ActionResult.SUCCESS,
+    }
+
+
 def test__run_reconcile_local_empty_server_dry_run(tmp_path: Path):
     """
     arrange: given metadata with name but not docs and docs folder with a file and mocked discourse

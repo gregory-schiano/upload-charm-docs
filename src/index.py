@@ -10,14 +10,15 @@ from pathlib import Path
 
 from more_itertools import peekable
 
-from .constants import DOC_FILE_EXTENSION
+from .constants import DOC_FILE_EXTENSION, NAVIGATION_TABLE_START
 from .discourse import Discourse
 from .exceptions import DiscourseError, InputError, ServerError
-from .reconcile import NAVIGATION_TABLE_START
 from .types_ import Index, IndexContentsListItem, IndexFile, Metadata, Page
 
 DOCUMENTATION_FOLDER_NAME = "docs"
 DOCUMENTATION_INDEX_FILENAME = f"index{DOC_FILE_EXTENSION}"
+CONTENTS_HEADER = "# contents"
+CONTENTS_END_LINE_PREFIX = "#"
 
 _WHITESPACE = "( *)"
 _LEADER = r"((\d\.)|(\*)|(-))"
@@ -152,6 +153,43 @@ def _parse_item_from_line(line: str, rank: int) -> _ParsedListItem:
     )
 
 
+def _remove_contents(lines: typing.Iterable[str]) -> typing.Iterator[str]:
+    """Removes the contents section lines from the index contents.
+
+    Args:
+        lines: The lines of the index file.
+
+    Returns:
+        All lines except the lines of the contents section.
+    """
+    contents_encountered = False
+    drop_lines = False
+    for line in lines:
+        if not contents_encountered and line.lower() == CONTENTS_HEADER:
+            contents_encountered = True
+            drop_lines = True
+        elif line.startswith(CONTENTS_END_LINE_PREFIX):
+            drop_lines = False
+
+        if not drop_lines:
+            yield line
+
+
+def get_content_for_server(index_file: IndexFile) -> str:
+    """Get the contents from the index file that should be passed to the server.
+
+    Args:
+        index_file: Information about the local index file.
+
+    Returns:
+        The contents of the index file that should be stored on the server.
+    """
+    if index_file.content is None:
+        return ""
+
+    return "\n".join(_remove_contents(index_file.content.splitlines()))
+
+
 def _get_contents_parsed_items(index_file: IndexFile) -> typing.Iterator[_ParsedListItem]:
     """Get the items from the contents list of the index file.
 
@@ -167,11 +205,11 @@ def _get_contents_parsed_items(index_file: IndexFile) -> typing.Iterator[_Parsed
     # Get the lines of the contents section
     lines = index_file.content.splitlines()
     # Advance past the contents heading
-    lines_from_contents = itertools.dropwhile(lambda line: line.lower() != "# contents", lines)
+    lines_from_contents = itertools.dropwhile(lambda line: line.lower() != CONTENTS_HEADER, lines)
     next(lines_from_contents, None)
     # Stop taking on the next heading
     contents_lines = itertools.takewhile(
-        lambda line: not line.startswith("#"), lines_from_contents
+        lambda line: not line.startswith(CONTENTS_END_LINE_PREFIX), lines_from_contents
     )
     # Remove empty lines
     non_empty_contents_lines = filter(None, contents_lines)
