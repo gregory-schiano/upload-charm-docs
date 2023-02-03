@@ -503,8 +503,8 @@ def test__calculate_action(
             (),
             (types_.CreateAction, types_.CreateAction),
             (
-                (path_info_2.level, path_info_2.table_path),
                 (path_info_1.level, path_info_1.table_path),
+                (path_info_2.level, path_info_2.table_path),
             ),
             id="multiple path infos empty table rows alternate order",
         ),
@@ -582,7 +582,9 @@ def test_run(
     path_infos = tuple(path_info_mkdir(path_info, base_dir=tmp_path) for path_info in path_infos)
 
     returned_actions = list(
-        reconcile.run(path_infos=path_infos, table_rows=table_rows, discourse=mock_discourse)
+        reconcile.run(
+            sorted_path_infos=path_infos, table_rows=table_rows, discourse=mock_discourse
+        )
     )
 
     assert (

@@ -262,7 +262,7 @@ def _calculate_action(
 
 
 def run(
-    path_infos: typing.Iterable[types_.PathInfo],
+    sorted_path_infos: typing.Iterable[types_.PathInfo],
     table_rows: typing.Iterable[types_.TableRow],
     discourse: Discourse,
 ) -> typing.Iterator[types_.AnyAction]:
@@ -274,15 +274,15 @@ def run(
     the server knowing that there may be cases that are not matched. The navigation table relies on
     the order that items are displayed to figure out the hierarchy/ page grouping (this is not a
     design choice of this action but how the documentation is interpreted by charmhub). Assume the
-    `path_infos` have been ordered to ensure that the hierarchy will be calculated correctly by the
+    `path_infos` have been sorted to ensure that the hierarchy will be calculated correctly by the
     server when the new navigation table is generated.
 
-    Items only in table_rows won't have their order is not preserved. Those items are the items
-    that are only on the server, i.e., those keys will just result in delete actions which have no
-    effect on the navigation table that is generated and hence ordering for them doesn't matter.
+    Items only in table_rows won't have their order preserved. Those items are the items that are
+    only on the server, i.e., those keys will just result in delete actions which have no effect on
+    the navigation table that is generated and hence ordering for them doesn't matter.
 
     Args:
-        path_infos: Information about the local documentation files.
+        sorted_path_infos: Information about the local documentation files.
         table_rows: Rows from the navigation table.
         discourse: A client to the documentation server.
 
@@ -291,16 +291,14 @@ def run(
         files.
     """
     path_info_lookup: types_.PathInfoLookup = {
-        (path_info.level, path_info.table_path): path_info for path_info in path_infos
+        (path_info.level, path_info.table_path): path_info for path_info in sorted_path_infos
     }
     table_row_lookup: types_.TableRowLookup = {
         (table_row.level, table_row.path): table_row for table_row in table_rows
     }
 
-    sorted_path_info_keys = sorted(
-        path_info_lookup, key=lambda key: path_info_lookup[key].alphabetical_rank
-    )
-    sorted_remaining_table_row_keys = sorted(table_row_lookup.keys() - path_info_lookup.keys())
+    sorted_path_info_keys = path_info_lookup.keys()
+    sorted_remaining_table_row_keys = sorted(table_row_lookup.keys() - sorted_path_info_keys)
     keys = itertools.chain(sorted_path_info_keys, sorted_remaining_table_row_keys)
     return itertools.chain.from_iterable(
         _calculate_action(path_info_lookup.get(key), table_row_lookup.get(key), discourse)

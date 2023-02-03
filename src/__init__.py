@@ -60,7 +60,7 @@ def _run_reconcile(
     )
     table_rows = navigation_table_from_page(page=server_content, discourse=discourse)
     actions = run_reconcile(
-        path_infos=sorted_path_infos, table_rows=table_rows, discourse=discourse
+        sorted_path_infos=sorted_path_infos, table_rows=table_rows, discourse=discourse
     )
     reports = run_all_actions(
         actions=actions,
