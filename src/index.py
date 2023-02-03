@@ -183,7 +183,7 @@ def _get_contents_parsed_items(index_file: IndexFile) -> typing.Iterator[_Parsed
 
 
 def _check_contents_item(
-    item: _ParsedListItem, whitespace_expectation: int, aggregate_dir: Path, base_dir: Path
+    item: _ParsedListItem, whitespace_expectation: int, aggregate_dir: Path, docs_path: Path
 ) -> None:
     """Check item is valid.
 
@@ -191,7 +191,7 @@ def _check_contents_item(
         item: The parsed item to check.
         aggregate_dir: The relative directory that all items must be within.
         whitespace_expectation: The expected number of whitespace characters for items.
-        base_dir: The base directory of all items.
+        docs_path: The base directory of all items.
 
     Raises:
         InputError:
@@ -224,7 +224,7 @@ def _check_contents_item(
         )
 
     # Check that if the item is a file, it has the correct extension
-    if (item_path := (base_dir / Path(item.reference_value))).is_file():
+    if (item_path := (docs_path / Path(item.reference_value))).is_file():
         if item_path.suffix.lower() != DOC_FILE_EXTENSION:
             raise InputError(
                 "An item in the contents list is not of the expected file type. "
@@ -234,7 +234,7 @@ def _check_contents_item(
 
 def _calculate_contents_hierarchy(
     parsed_items: "peekable[_ParsedListItem]",
-    base_dir: Path,
+    docs_path: Path,
     aggregate_dir: Path = Path(),
     hierarchy: int = 0,
     whitespace_expectation: int = 0,
@@ -243,7 +243,7 @@ def _calculate_contents_hierarchy(
 
     Args:
         parsed_items: The parsed items from the contents list in the index file.
-        base_dir: The base directory of all items.
+        docs_path: The base directory of all items.
         aggregate_dir: The relative directory that all items must be within.
         hierarchy: The hierarchy of the current directory.
         whitespace_expectation: The expected number of whitespace characters for items.
@@ -266,7 +266,7 @@ def _calculate_contents_hierarchy(
             item=next_item,
             whitespace_expectation=whitespace_expectation,
             aggregate_dir=aggregate_dir,
-            base_dir=base_dir,
+            docs_path=docs_path,
         )
 
         # Advance the iterator
@@ -276,7 +276,7 @@ def _calculate_contents_hierarchy(
         next_item = parsed_items.peek(default=None)
 
         # Process file
-        if (base_dir / item_path).is_file():
+        if (docs_path / item_path).is_file():
             yield IndexContentsListItem(
                 hierarchy=hierarchy + 1,
                 reference_title=item.reference_title,
@@ -284,7 +284,7 @@ def _calculate_contents_hierarchy(
                 rank=item.rank,
             )
         # Process directory
-        elif (base_dir / item_path).is_dir():
+        elif (docs_path / item_path).is_dir():
             yield IndexContentsListItem(
                 hierarchy=hierarchy + 1,
                 reference_title=item.reference_title,
@@ -294,7 +294,7 @@ def _calculate_contents_hierarchy(
             if next_item is not None and next_item.whitespace_count > whitespace_expectation:
                 yield from _calculate_contents_hierarchy(
                     parsed_items=parsed_items,
-                    base_dir=base_dir,
+                    docs_path=docs_path,
                     aggregate_dir=item_path,
                     hierarchy=hierarchy + 1,
                     whitespace_expectation=next_item.whitespace_count,
@@ -303,15 +303,15 @@ def _calculate_contents_hierarchy(
             raise InputError(f"An item is not a file or directory. {item=!r}")
 
 
-def get_contents(index_file: IndexFile, base_dir: Path) -> typing.Iterator[IndexContentsListItem]:
+def get_contents(index_file: IndexFile, docs_path: Path) -> typing.Iterator[IndexContentsListItem]:
     """Get the contents list items from the index file.
 
     Args:
         index_file: The index file to read the contents from.
-        base_dir: The base directory of all items.
+        docs_path: The base directory of all items.
 
     Returns:
         Iterator with all items from the contents list.
     """
     parsed_items = _get_contents_parsed_items(index_file=index_file)
-    return _calculate_contents_hierarchy(parsed_items=peekable(parsed_items), base_dir=base_dir)
+    return _calculate_contents_hierarchy(parsed_items=peekable(parsed_items), docs_path=docs_path)

@@ -22,7 +22,7 @@ class _SortData(typing.NamedTuple):
         directories_index: Lookup for the index of the directory PathInfos into
             alpha_sorted_path_infos.
         items: The contents index items.
-        base_dir: The directory the documentation files are contained within.
+        docs_path: The directory the documentation files are contained within.
     """
 
     alpha_sorted_path_infos: list[types_.PathInfo]
@@ -30,20 +30,20 @@ class _SortData(typing.NamedTuple):
     local_path_path_info: dict[Path, types_.PathInfo]
     directories_index: dict[Path, int]
     items: "peekable[types_.IndexContentsListItem]"
-    base_dir: Path
+    docs_path: Path
 
 
 def _create_sort_data(
     path_infos: typing.Iterable[types_.PathInfo],
     index_contents: typing.Iterable[types_.IndexContentsListItem],
-    base_dir: Path,
+    docs_path: Path,
 ) -> _SortData:
     """Create the data structures required for the sort execution.
 
     Args:
         path_infos: Information about the local documentation files.
         index_contents: The content index items used to apply sorting.
-        base_dir: The directory the documentation files are contained within.
+        docs_path: The directory the documentation files are contained within.
 
     Returns:
         The data structures required for sorting.
@@ -57,7 +57,7 @@ def _create_sort_data(
         for idx, path_info in enumerate(alpha_sorted_path_infos)
         if path_info.local_path.is_dir()
     }
-    directories_index[base_dir] = 0
+    directories_index[docs_path] = 0
 
     return _SortData(
         alpha_sorted_path_infos=alpha_sorted_path_infos,
@@ -67,7 +67,7 @@ def _create_sort_data(
         },
         directories_index=directories_index,
         items=peekable(rank_sorted_index_contents),
-        base_dir=base_dir,
+        docs_path=docs_path,
     )
 
 
@@ -94,7 +94,7 @@ def _contents_index_iter(
         next_item = sort_data.items.peek(None)
 
         # Get the path info
-        item_local_path = sort_data.base_dir / item.reference_value
+        item_local_path = sort_data.docs_path / item.reference_value
         item_path_info = sort_data.local_path_path_info[item_local_path]
         # Update the navlink title based on the contents index
         item_path_info_dict = item_path_info._asdict()
@@ -133,7 +133,7 @@ def _contents_index_iter(
 def using_contents_index(
     path_infos: typing.Iterable[types_.PathInfo],
     index_contents: typing.Iterable[types_.IndexContentsListItem],
-    base_dir: Path,
+    docs_path: Path,
 ) -> typing.Iterator[types_.PathInfo]:
     """Sort PathInfos based on the contents index and alphabetical rank.
 
@@ -142,17 +142,17 @@ def using_contents_index(
     Args:
         path_infos: Information about the local documentation files.
         index_contents: The content index items used to apply sorting.
-        base_dir: The directory the documentation files are contained within.
+        docs_path: The directory the documentation files are contained within.
 
     Yields:
         PathInfo sorted based on their location on the contents index and then by alphabetical
         rank.
     """
     sort_data = _create_sort_data(
-        path_infos=path_infos, index_contents=index_contents, base_dir=base_dir
+        path_infos=path_infos, index_contents=index_contents, docs_path=docs_path
     )
 
-    yield from _contents_index_iter(sort_data=sort_data, current_dir=base_dir)
+    yield from _contents_index_iter(sort_data=sort_data, current_dir=docs_path)
     # Yield all items not yet yielded
     yield from (
         path_info

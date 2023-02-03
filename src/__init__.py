@@ -13,11 +13,13 @@ from .docs_directory import read as read_docs_directory
 from .exceptions import InputError
 from .index import DOCUMENTATION_FOLDER_NAME, contents_from_page
 from .index import get as get_index
+from .index import get_contents as get_index_contents
 from .metadata import get as get_metadata
 from .migration import run as migrate_contents
 from .navigation_table import from_page as navigation_table_from_page
 from .pull_request import RepositoryClient, create_pull_request, create_repository_client
 from .reconcile import run as run_reconcile
+from .sort import using_contents_index as sort_using_contents_index
 from .types_ import ActionResult, Metadata, UserInputs
 
 GETTING_STARTED = (
@@ -47,12 +49,19 @@ def _run_reconcile(
 
     """
     index = get_index(metadata=metadata, base_path=base_path, server_client=discourse)
-    path_infos = read_docs_directory(docs_path=base_path / DOCUMENTATION_FOLDER_NAME)
+    docs_path = base_path / DOCUMENTATION_FOLDER_NAME
+    path_infos = read_docs_directory(docs_path=docs_path)
     server_content = (
         index.server.content if index.server is not None and index.server.content else ""
     )
+    index_contents = get_index_contents(index_file=index.local, docs_path=docs_path)
+    sorted_path_infos = sort_using_contents_index(
+        path_infos=path_infos, index_contents=index_contents, docs_path=docs_path
+    )
     table_rows = navigation_table_from_page(page=server_content, discourse=discourse)
-    actions = run_reconcile(path_infos=path_infos, table_rows=table_rows, discourse=discourse)
+    actions = run_reconcile(
+        path_infos=sorted_path_infos, table_rows=table_rows, discourse=discourse
+    )
     reports = run_all_actions(
         actions=actions,
         index=index,

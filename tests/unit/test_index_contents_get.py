@@ -101,6 +101,6 @@ def test_get_contents(
     )
     index_file = types_.IndexFile(title="title 1", content=f"# Contents\n{content_items}\n")
 
-    returned_items = tuple(index.get_contents(index_file=index_file, base_dir=tmp_path))
+    returned_items = tuple(index.get_contents(index_file=index_file, docs_path=tmp_path))
 
     assert returned_items == expected_items

@@ -554,7 +554,7 @@ def test_using_contents_index(
 
     returned_path_infos = tuple(
         sort.using_contents_index(
-            path_infos=path_infos, index_contents=index_contents, base_dir=tmp_path
+            path_infos=path_infos, index_contents=index_contents, docs_path=tmp_path
         )
     )
 

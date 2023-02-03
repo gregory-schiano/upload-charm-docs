@@ -221,7 +221,7 @@ def test__calculate_contents_hierarchy_invalid(
     with pytest.raises(exceptions.InputError) as exc_info:
         tuple(
             index._calculate_contents_hierarchy(
-                parsed_items=peekable(parsed_items), base_dir=tmp_path
+                parsed_items=peekable(parsed_items), docs_path=tmp_path
             )
         )
 
@@ -704,7 +704,9 @@ def test__calculate_contents_hierarchy(
         create_path_func(parsed_item.reference_value, tmp_path)
 
     returned_items = tuple(
-        index._calculate_contents_hierarchy(parsed_items=peekable(parsed_items), base_dir=tmp_path)
+        index._calculate_contents_hierarchy(
+            parsed_items=peekable(parsed_items), docs_path=tmp_path
+        )
     )
 
     assert returned_items == expected_items
