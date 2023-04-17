@@ -172,7 +172,6 @@ def main_reconcile(path: Path, user_inputs: types_.UserInputs) -> dict:
     return run_reconcile(clients=clients, user_inputs=user_inputs)
 
 
-@execute_in_tmpdir
 def main() -> None:
     """Execute the action."""
     logging.basicConfig(level=logging.INFO)
