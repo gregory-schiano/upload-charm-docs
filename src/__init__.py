@@ -17,7 +17,9 @@ from .index import get as get_index
 from .navigation_table import from_page as navigation_table_from_page
 from .reconcile import run as get_reconcile_actions
 from .repository import DEFAULT_BRANCH_NAME
-from .types_ import ActionResult, UserInputs
+from .types_ import (
+    ActionResult, UserInputs, PullRequestAction, ReconcileOutputs, MigrateOutputs, Url
+)
 
 GETTING_STARTED = (
     "To get started with upload-charm-docs, "
@@ -25,7 +27,7 @@ GETTING_STARTED = (
 )
 
 
-def run_reconcile(clients: Clients, user_inputs: UserInputs) -> dict[str, str]:
+def run_reconcile(clients: Clients, user_inputs: UserInputs) -> ReconcileOutputs | None:
     """Upload the documentation to charmhub.
 
     Args:
@@ -33,7 +35,7 @@ def run_reconcile(clients: Clients, user_inputs: UserInputs) -> dict[str, str]:
         user_inputs: Configurable inputs for running upload-charm-docs.
 
     Returns:
-        All the URLs that had an action with the result of that action.
+        ReconcileOutputs object with the result of the action. None, if there is no reconcile.
 
     Raises:
         InputError: if there are any problems with executing any of the actions.
@@ -45,14 +47,14 @@ def run_reconcile(clients: Clients, user_inputs: UserInputs) -> dict[str, str]:
             "present in the repository"
         )
 
-        return {}
+        return None
 
     if clients.repository.is_same_commit(DOCUMENTATION_TAG, user_inputs.commit_sha):
         logging.warning(
             "Cannot run any reconcile to Discourse as we are at the same commit of the tag %s",
             DOCUMENTATION_TAG,
         )
-        return {}
+        return None
 
     metadata = clients.repository.metadata
     base_path = clients.repository.base_path
@@ -83,19 +85,19 @@ def run_reconcile(clients: Clients, user_inputs: UserInputs) -> dict[str, str]:
             "One or more of the required actions could not be executed, see the log for details"
         )
 
-    reports = run_all_actions(
+    index_url, reports = run_all_actions(
         actions=actions,
         index=index,
         discourse=clients.discourse,
         dry_run=user_inputs.dry_run,
         delete_pages=user_inputs.delete_pages,
     )
-    urls_with_actions: dict[str, str] = {
+    urls_with_actions: dict[Url, ActionResult] = {
         str(report.location): report.result
         for report in reports
         if report.location is not None
-        and report.location != DRY_RUN_NAVLINK_LINK
-        and report.location != FAIL_NAVLINK_LINK
+           and report.location != DRY_RUN_NAVLINK_LINK
+           and report.location != FAIL_NAVLINK_LINK
     }
 
     if not user_inputs.dry_run:
@@ -103,10 +105,14 @@ def run_reconcile(clients: Clients, user_inputs: UserInputs) -> dict[str, str]:
             tag_name=DOCUMENTATION_TAG, commit_sha=user_inputs.commit_sha
         )
 
-    return urls_with_actions
+    return ReconcileOutputs(
+        index_url=index_url,
+        topics=urls_with_actions,
+        documentation_tag=clients.repository.tag_exists(DOCUMENTATION_TAG)
+    )
 
 
-def run_migrate(clients: Clients, user_inputs: UserInputs) -> dict[str, str]:
+def run_migrate(clients: Clients, user_inputs: UserInputs) -> MigrateOutputs | None:
     """Migrate existing docs from charmhub to local repository.
 
     Args:
@@ -114,15 +120,15 @@ def run_migrate(clients: Clients, user_inputs: UserInputs) -> dict[str, str]:
         user_inputs: Configurable inputs for running upload-charm-docs.
 
     Returns:
-        A single key-value pair dictionary containing a link to the Pull Request containing
-        migrated documentation as key and successful action result as value.
+        MigrateOutputs providing details on the action performed and a link to the
+        Pull Request containing migrated documentation. None if there is no migration.
     """
     if not clients.repository.metadata.docs:
         logging.warning(
             "Cannot run migration from Discourse as there is no discourse "
             "link available in metadata"
         )
-        return {}
+        return None
 
     logging.info("Tag exists: %s", str(clients.repository.tag_exists(DOCUMENTATION_TAG)))
 
@@ -144,18 +150,24 @@ def run_migrate(clients: Clients, user_inputs: UserInputs) -> dict[str, str]:
         # Given there are NO diffs compared to the base, if a PR is open, it should be closed
         if pull_request is not None:
             pull_request.edit(state="closed")
-        return {}
+            return MigrateOutputs(
+                action=PullRequestAction.CLOSED,
+                pull_request_url=pull_request.html_url
+            )
+        return None
 
-    if pull_request is not None:
-        logging.info(
-            "upload-charm-documents pull request already open at %s", pull_request.html_url
-        )
-        clients.repository.update_pull_request(DEFAULT_BRANCH_NAME)
-    else:
+    if pull_request is None:
         logging.info("PR not existing: creating a new one...")
         pull_request = clients.repository.create_pull_request(user_inputs.base_branch)
+        return MigrateOutputs(
+            action=PullRequestAction.OPENED,
+            pull_request_url=pull_request.html_url
+        )
 
-    return {pull_request.html_url: ActionResult.SUCCESS}
+    logging.info("upload-charm-documents pull request already open at %s", pull_request.html_url)
+    clients.repository.update_pull_request(DEFAULT_BRANCH_NAME)
+
+    return MigrateOutputs(action=PullRequestAction.UPDATED, pull_request_url=pull_request.html_url)
 
 
 def pre_flight_checks(clients: Clients, user_inputs: UserInputs) -> bool:
