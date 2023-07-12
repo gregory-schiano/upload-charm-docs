@@ -273,7 +273,6 @@ def _calculate_contents_hierarchy(
     docs_path: Path,
     aggregate_dir: Path = Path(),
     hierarchy: int = 0,
-    whitespace_expectation: int = 0,
 ) -> typing.Iterator[IndexContentsListItem]:
     """Calculate the hierarchy of the contents list items.
 
@@ -282,7 +281,6 @@ def _calculate_contents_hierarchy(
         docs_path: The base directory of all items.
         aggregate_dir: The relative directory that all items must be within.
         hierarchy: The hierarchy of the current directory.
-        whitespace_expectation: The expected number of whitespace characters for items.
 
     Yields:
         The contents list items with the hierarchy.
@@ -294,18 +292,18 @@ def _calculate_contents_hierarchy(
             - An item isn't a file nor directory.
     """
     parents: list[_ParsedListItem] = []
+    whitespace_expectation_per_level = [0]
     item = next(parsed_items, None)
     while item:
         # All items in the current directory have been processed
-        if item.whitespace_count < whitespace_expectation:
+        if item.whitespace_count < whitespace_expectation_per_level[hierarchy]:
             hierarchy = hierarchy - 1
             parent = parents.pop()
             aggregate_dir = Path(parent.reference_value).parent
-            whitespace_expectation = parent.whitespace_count
 
         _check_contents_item(
             item=item,
-            whitespace_expectation=whitespace_expectation,
+            whitespace_expectation=whitespace_expectation_per_level[hierarchy],
             aggregate_dir=aggregate_dir,
             docs_path=docs_path,
         )
@@ -329,10 +327,14 @@ def _calculate_contents_hierarchy(
                 reference_value=item.reference_value,
                 rank=item.rank,
             )
-            if next_item is not None and next_item.whitespace_count > whitespace_expectation:
+            if (
+                next_item is not None
+                and next_item.whitespace_count > whitespace_expectation_per_level[hierarchy]
+            ):
                 hierarchy = hierarchy + 1
                 aggregate_dir = item_path
-                whitespace_expectation = next_item.whitespace_count
+                if hierarchy not in whitespace_expectation_per_level:
+                    whitespace_expectation_per_level.insert(hierarchy, next_item.whitespace_count)
                 parents.append(item)
         else:
             raise InputError(f"An item is not a file or directory. {item=!r}")

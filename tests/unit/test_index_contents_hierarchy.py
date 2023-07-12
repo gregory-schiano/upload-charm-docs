@@ -10,7 +10,6 @@ import typing
 from pathlib import Path
 
 import pytest
-from more_itertools import peekable
 
 from src import constants, exceptions, index, types_
 
@@ -76,6 +75,37 @@ def _test__calculate_contents_hierarchy_invalid_parameters():
             (create_dir,),
             ("more", "whitespace", "0", repr(item)),
             id="directory wrong whitespace",
+        ),
+        pytest.param(
+            (
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0,
+                    reference_title="title 1",
+                    reference_value=(dir_1 := "dir_1"),
+                    rank=1,
+                ),
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=1,
+                    reference_title="title 2",
+                    reference_value=f"{dir_1}/file_2.md",
+                    rank=2,
+                ),
+                factories.IndexParsedListItemFactory(
+                    whitespace_count=0,
+                    reference_title="title 3",
+                    reference_value=(dir_3 := "dir_3"),
+                    rank=1,
+                ),
+                item := factories.IndexParsedListItemFactory(
+                    whitespace_count=2,
+                    reference_title="title 4",
+                    reference_value=f"{dir_3}/file_4.md",
+                    rank=2,
+                ),
+            ),
+            (create_dir, create_file, create_dir, create_file),
+            ("more", "whitespace", "1", repr(item)),
+            id="hierarchy wrong whitespace",
         ),
         pytest.param(
             (
@@ -221,7 +251,7 @@ def test__calculate_contents_hierarchy_invalid(
     with pytest.raises(exceptions.InputError) as exc_info:
         tuple(
             index._calculate_contents_hierarchy(
-                parsed_items=peekable(parsed_items), docs_path=tmp_path
+                parsed_items=iter(parsed_items), docs_path=tmp_path
             )
         )
 
@@ -704,9 +734,7 @@ def test__calculate_contents_hierarchy(
         create_path_func(parsed_item.reference_value, tmp_path)
 
     returned_items = tuple(
-        index._calculate_contents_hierarchy(
-            parsed_items=peekable(parsed_items), docs_path=tmp_path
-        )
+        index._calculate_contents_hierarchy(parsed_items=iter(parsed_items), docs_path=tmp_path)
     )
 
     assert returned_items == expected_items
